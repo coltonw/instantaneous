@@ -46,7 +46,7 @@ def deck_summary(deck):
 
 
 pool = pool()
-print(f'Pool:\n{pool}\n')
+# print(f'Pool:\n{pool}\n')
 stoneAgePool = list(filter(lambda card: card.age == Age.STONE, pool))
 ironAgePool = list(filter(lambda card: card.age == Age.IRON, pool))
 crystalAgePool = list(filter(lambda card: card.age == Age.CRYSTAL, pool))
@@ -70,8 +70,8 @@ decks['stoneThresholdIronMostly'] = stoneAgePool[0:4] + ironAgePool + ironAgePoo
 decks['stoneThresholdEven'] = stoneAgePool[0:4] + ironAgePool[0:8] + crystalAgePool[0:8]
 decks['strong'] = stoneAgePool[0:5] + ironAgePool[0:5] + crystalAgePool[0:10]
 for i in range(20 - len(decks)):
-    decks[f'rand{i}'] = sample(strongPool, 10) + sample(weakPool, 10)
-    print('Random {0}:\n{1}'.format(i, decks[f'rand{i}']))
+    # multi sample makes it more possible that we repeat cards more which causes more variety in deck breakdown.
+    decks[f'rand{i}'] = sample(strongPool, 4) + sample(strongPool, 4) + sample(strongPool, 4) + sample(weakPool, 4) + sample(weakPool, 4)
 
 winPct = []
 for name1, deck1 in decks.items():
@@ -81,7 +81,7 @@ for name1, deck1 in decks.items():
         m = match(deck1, deck2)
         if m > 0:
             wins += 1
-        print(f'{name1} vs {name2}: {m}')
+        # print(f'{name1} vs {name2}: {m}')
     winPct.append((name1, wins / len(decks) * 100))
 print()
 
@@ -89,8 +89,8 @@ winPct = sorted(winPct, key=lambda t: t[1], reverse=True)
 for name, pct in winPct:
     print('{0} win%: {1:.0f}'.format(name, pct))
 
-print('\niron only {0}'.format(deck_summary(decks['ironOnly'])))
-print('\nstone threshold {0}'.format(deck_summary(decks['stoneThresholdIronMostly'])))
+# print('\niron only {0}'.format(deck_summary(decks['ironOnly'])))
+# print('\nstone threshold {0}'.format(deck_summary(decks['stoneThresholdIronMostly'])))
 
 # print(f'Deck1:\n{deck1}')
 # print(f'Deck2:\n{deck2}')
@@ -99,4 +99,4 @@ print('\nstone threshold {0}'.format(deck_summary(decks['stoneThresholdIronMostl
 # print(f'Deck1{deck_summary(deck1)}')
 # print(f'Deck2{deck_summary(deck2)}')
 
-print('\nMatch: {0}'.format(match(decks['ironOnly'], decks['stoneThresholdIronMostly'], True)))
+# print('\nMatch: {0}'.format(match(decks['ironOnly'], decks['stoneThresholdIronMostly'], True)))

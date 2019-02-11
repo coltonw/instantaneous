@@ -1,4 +1,4 @@
-from card import Age, pool
+from card import Age, Race, pool
 from random import sample
 from functools import reduce
 
@@ -32,8 +32,8 @@ def match(deck1, deck2, verbose=False):
         print(f'iron result: {ironResult}')
     if abs(ironResult) < IRON_BONUS_THRESHOLD:
         ironBonus = 0
-    # if (ironResult >= 0 and stoneResult >= 0) or (ironResult <= 0 and stoneResult <= 0):
-    ironBonus = ironBonus + stoneBonus
+    if (ironResult >= 0 and stoneResult >= 0) or (ironResult <= 0 and stoneResult <= 0):
+        ironBonus = ironBonus + stoneBonus
     return _age(Age.CRYSTAL, deck1, deck2) + ironBonus
 
 
@@ -50,6 +50,8 @@ print(f'Pool:\n{pool}\n')
 stoneAgePool = list(filter(lambda card: card.age == Age.STONE, pool))
 ironAgePool = list(filter(lambda card: card.age == Age.IRON, pool))
 crystalAgePool = list(filter(lambda card: card.age == Age.CRYSTAL, pool))
+strongPool = list(filter(lambda card: card.race == Race.BEASTMAN, pool))
+weakPool = list(filter(lambda card: card.race != Race.BEASTMAN, pool))
 
 random = sample(pool, 20)
 # deck2 = sample(pool, 20)
@@ -67,6 +69,9 @@ decks['stoneMostly'] = stoneAgePool + stoneAgePool[-3:0] + ironAgePool[0:2]
 decks['stoneThresholdIronMostly'] = stoneAgePool[0:4] + ironAgePool + ironAgePool[-1:0]
 decks['stoneThresholdEven'] = stoneAgePool[0:4] + ironAgePool[0:8] + crystalAgePool[0:8]
 decks['strong'] = stoneAgePool[0:5] + ironAgePool[0:5] + crystalAgePool[0:10]
+for i in range(20 - len(decks)):
+    decks[f'rand{i}'] = sample(strongPool, 10) + sample(weakPool, 10)
+    print('Random {0}:\n{1}'.format(i, decks[f'rand{i}']))
 
 winPct = []
 for name1, deck1 in decks.items():

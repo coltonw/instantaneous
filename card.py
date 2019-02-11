@@ -4,7 +4,7 @@ from enum import Enum, auto
 class Age(Enum):
     STONE = 1
     IRON = 2
-    CRYSTAL = 3
+    CRYSTAL = 4
 
 
 class Race(Enum):
@@ -50,6 +50,7 @@ def pool():
                     strength = 5
                 elif age == Age.CRYSTAL:
                     strength = 8
+                # for testing purposes, Beastmen are slightly stronger
                 if race == Race.BEASTMAN:
                     strength += age.value
                 finalPool.append(Card(strength, age, race, prof))

@@ -1,4 +1,5 @@
 from enum import Enum, auto
+from random import random
 
 
 class Age(Enum):
@@ -24,14 +25,15 @@ class Profession(Enum):
 
 class Card:
 
-    def __init__(self, strength, age, race, prof):
+    def __init__(self, strength, age, race, prof, desc=''):
         self.strength = strength
         self.age = age
         self.race = race
         self.prof = prof
+        self.desc = desc
 
     def __repr__(self):
-        return f'Card({self.strength},{self.age},{self.race},{self.prof})'
+        return f'Card({self.strength},{self.age},{self.race},{self.prof},{self.desc})'
 
     def __str__(self):
         return repr(self)
@@ -40,8 +42,8 @@ class Card:
         return self.strength
 
 
-def pool():
-    finalPool = []
+def generate_basic_pool():
+    pool = []
     for age in Age:
         for race in Race:
             for prof in Profession:
@@ -50,8 +52,27 @@ def pool():
                     strength = 5
                 elif age == Age.CRYSTAL:
                     strength = 8
-                # for testing purposes, Beastmen are slightly stronger
-                if race == Race.BEASTMAN:
-                    strength += age.value
-                finalPool.append(Card(strength, age, race, prof))
-    return finalPool
+                if random() > .1:
+                    pool.append(Card(strength, age, race, prof))
+                if age != Age.CRYSTAL and random() > .1:
+                    pool.append(Card(strength, age, race, prof))
+    return pool
+
+
+def generate_pool():
+    pool = generate_basic_pool()
+    for card in pool:
+        r = random()
+        if r < .1:
+            # stronger card
+            card.strength = card.strength + card.age.value
+        elif r < .2:
+            # easy synergy
+            card.desc = 'easy synergy'
+        elif r < .3:
+            # tough synergy
+            card.desc = 'tough synergy'
+        elif r < .4:
+            # counter
+            card.desc = 'counter'
+    return pool

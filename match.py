@@ -1,4 +1,4 @@
-from card import Age, Race, pool
+from card import Age, Race, generate_pool
 from random import sample
 from functools import reduce
 
@@ -45,7 +45,7 @@ def deck_summary(deck):
     return f'(stone={deck_count(Age.STONE, deck)},iron={deck_count(Age.IRON, deck)},crystal={deck_count(Age.CRYSTAL, deck)})'
 
 
-pool = pool()
+pool = generate_pool()
 # print(f'Pool:\n{pool}\n')
 stoneAgePool = list(filter(lambda card: card.age == Age.STONE, pool))
 ironAgePool = list(filter(lambda card: card.age == Age.IRON, pool))

@@ -68,7 +68,7 @@ def generate_pool():
             card.strength = card.strength + card.age.value
         elif r < .2:
             # easy synergy
-            card.desc = 'easy synergy'
+            card.desc = 'easy synergy which has a super long desc which would never fit on a card ever because it is way too long'
         elif r < .3:
             # tough synergy
             card.desc = 'tough synergy'

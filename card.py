@@ -23,6 +23,9 @@ class Profession(Enum):
     WOODSMAN = auto()
 
 
+BASE_STRENGTH = {Age.STONE: 3, Age.IRON: 5, Age.CRYSTAL: 8}
+
+
 class Card:
 
     def __init__(self, strength, age, race, prof, desc=''):
@@ -47,11 +50,7 @@ def generate_basic_pool():
     for age in Age:
         for race in Race:
             for prof in Profession:
-                strength = 3
-                if age == Age.IRON:
-                    strength = 5
-                elif age == Age.CRYSTAL:
-                    strength = 8
+                strength = BASE_STRENGTH[age]
                 if random() > .1:
                     pool.append(Card(strength, age, race, prof))
                 if age != Age.CRYSTAL and random() > .1:

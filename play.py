@@ -1,6 +1,8 @@
-from card import generate_pool
 import shutil
 from textwrap import wrap
+from card import generate_pool
+from match import DECK_SIZE, match, deck_summary
+import ai
 
 pool = generate_pool()
 box = {
@@ -48,7 +50,7 @@ def finish_card(cardRows, cardDispArr):
     columns = shutil.get_terminal_size()[0]
     cardRow = cardRows[-1]
     if len(cardDispArr) < cardInnerHeight + 1:
-        cardDispArr.extend([' ' * cardInnerWidth + box['v']] * (cardInnerHeight + 1 - len(cardDispArr)))
+        cardDispArr = cardDispArr + ([' ' * cardInnerWidth + box['v']] * (cardInnerHeight + 1 - len(cardDispArr)))
     cardDispArr.append(box['h'] * cardInnerWidth + box['bb'])
     for i, cardDispStr in enumerate(cardDispArr):
         cardRow[i] = cardRow[i] + cardDispStr
@@ -79,67 +81,6 @@ def display_cards(cards):
             print(cardStr)
 
 
-def display_cards_old(cards):
-    columns = shutil.get_terminal_size()[0]
-    idLine = box['tl']
-    strLine = box['v']
-    ageLine = box['v']
-    profLine = box['v']
-    raceLine = box['v']
-    blankLine = box['v']
-    descLine = box['v']
-    descLine2 = box['v']
-    bottom = box['bl']
-    justCapped = False
-
-    for i, card in enumerate(cards):
-        justCapped = False
-        idLine = idLine + in_card(i, box['h']) + box['tb']
-        strLine = strLine + in_card(str(card.strength) + 'str') + box['v']
-        ageLine = ageLine + in_card(card.age) + box['v']
-        profLine = profLine + in_card(card.prof) + box['v']
-        raceLine = raceLine + in_card(card.race) + box['v']
-        blankLine = blankLine + (' ' * cardInnerWidth) + box['v']
-        descList = wrap(card.desc, cardInnerWidth)
-        descList.append('')
-        descList.append('')
-        descLine = descLine + in_card(descList[0]) + box['v']
-        descLine2 = descLine2 + in_card(descList[1]) + box['v']
-        bottom = bottom + box['h'] * cardInnerWidth + box['bb']
-        # if the next card will wrap around in columns
-        if len(idLine) + cardInnerWidth + 1 > columns:
-            justCapped = True
-            print(idLine[:-1] + box['tr'])
-            print(strLine[:-1] + box['v'])
-            print(ageLine[:-1] + box['v'])
-            print(profLine[:-1] + box['v'])
-            print(raceLine[:-1] + box['v'])
-            print(blankLine[:-1] + box['v'])
-            print(descLine[:-1] + box['v'])
-            print(descLine2[:-1] + box['v'])
-            print(bottom[:-1] + box['br'])
-            idLine = box['tl']
-            strLine = box['v']
-            ageLine = box['v']
-            profLine = box['v']
-            raceLine = box['v']
-            blankLine = box['v']
-            descLine = box['v']
-            descLine2 = box['v']
-            bottom = box['bl']
-
-    if not justCapped:
-        print(idLine[:-1] + box['tr'])
-        print(strLine[:-1] + box['v'])
-        print(ageLine[:-1] + box['v'])
-        print(profLine[:-1] + box['v'])
-        print(raceLine[:-1] + box['v'])
-        print(blankLine[:-1] + box['v'])
-        print(descLine[:-1] + box['v'])
-        print(descLine2[:-1] + box['v'])
-        print(bottom[:-1] + box['br'])
-
-
 # deckMap = {}
 # idea: input comma separated ints to enable or negative ints to disable cards in your deck
 # while True:
@@ -147,4 +88,43 @@ def display_cards_old(cards):
 
 
 display_cards(pool)
-display_cards([])
+
+
+# print(f'Pool:\n{pool}\n')
+# stoneAgePool = list(filter(lambda card: card.age == Age.STONE, pool))
+# ironAgePool = list(filter(lambda card: card.age == Age.IRON, pool))
+# crystalAgePool = list(filter(lambda card: card.age == Age.CRYSTAL, pool))
+# strongPool = list(filter(lambda card: card.race == Race.BEASTMAN, pool))
+# weakPool = list(filter(lambda card: card.race != Race.BEASTMAN, pool))
+
+decks = {}
+decks['even'] = ai.even(pool)
+# decks['stoneOnly'] = stoneAgePool + stoneAgePool[-5:0]
+# decks['ironOnly'] = ironAgePool + ironAgePool[-5:0]
+# decks['crystalOnly'] = crystalAgePool + crystalAgePool[-5:0]
+decks['stoneIron'] = ai.stone_iron(pool)
+# decks['stoneCrystal'] = stoneAgePool[0:10] + crystalAgePool[0:10]
+# decks['ironCrystal'] = ironAgePool[0:10] + crystalAgePool[0:10]
+# decks['stoneMostly'] = stoneAgePool + stoneAgePool[-3:0] + ironAgePool[0:2]
+# decks['stoneThresholdIronMostly'] = stoneAgePool[0:4] + ironAgePool + ironAgePool[-1:0]
+decks['stoneThresholdEven'] = ai.low_stone(pool)
+# decks['strong'] = stoneAgePool[0:5] + ironAgePool[0:5] + crystalAgePool[0:10]
+for i in range(DECK_SIZE - len(decks)):
+    # multi sample makes it more possible that we repeat cards more which causes more variety in deck breakdown.
+    decks[f'rand{i}'] = ai.strong(pool)
+
+winPct = []
+for name1, deck1 in decks.items():
+    print('{0}{1}'.format(name1, deck_summary(deck1)))
+    wins = 0
+    for name2, deck2 in decks.items():
+        m = match(deck1, deck2)
+        if m > 0:
+            wins += 1
+        # print(f'{name1} vs {name2}: {m}')
+    winPct.append((name1, wins / len(decks) * 100))
+print()
+
+winPct = sorted(winPct, key=lambda t: t[1], reverse=True)
+for name, pct in winPct:
+    print('{0} win%: {1:.0f}'.format(name, pct))

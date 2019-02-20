@@ -1,14 +1,14 @@
-from card import Age, Race, generate_pool
-from random import sample
 from functools import reduce
+from card import Age, BASE_STRENGTH
 
 # these are one less than 4 base strength cards.
 # This means you can win an age with 2 strong cards and 1 base strength card or with 1 really strong card and 2 base strength cards
 STONE_BONUS_THRESHOLD = 11
 IRON_BONUS_THRESHOLD = 19
+DECK_SIZE = 20
 
 
-def _deckStrength(deck, oppDeck):
+def _deck_strength(deck, oppDeck):
     deckStrengths = map(lambda card: card.calcStrength(deck, oppDeck), deck)
     return sum(deckStrengths)
 
@@ -16,7 +16,7 @@ def _deckStrength(deck, oppDeck):
 def _age(age, deck1, deck2):
     agedDeck1 = filter(lambda card: card.age.value <= age.value, deck1)
     agedDeck2 = filter(lambda card: card.age.value <= age.value, deck2)
-    return _deckStrength(agedDeck1, agedDeck2) - _deckStrength(agedDeck2, agedDeck1)
+    return _deck_strength(agedDeck1, agedDeck2) - _deck_strength(agedDeck2, agedDeck1)
 
 
 def match(deck1, deck2, verbose=False):
@@ -37,66 +37,11 @@ def match(deck1, deck2, verbose=False):
     return _age(Age.CRYSTAL, deck1, deck2) + ironBonus
 
 
-def deck_count(age, deck):
-    return reduce(lambda acc, card: acc + (card.age == age), deck, 0)
+def deck_count(age, deck, strong):
+    if strong:
+        return reduce(lambda acc, card: acc + (card.age == age and card.strength > BASE_STRENGTH[card.age]), deck, 0)
+    return reduce(lambda acc, card: acc + (card.age == age and card.strength <= BASE_STRENGTH[card.age]), deck, 0)
 
 
 def deck_summary(deck):
-    return f'(stone={deck_count(Age.STONE, deck)},iron={deck_count(Age.IRON, deck)},crystal={deck_count(Age.CRYSTAL, deck)})'
-
-
-pool = generate_pool()
-# print(f'Pool:\n{pool}\n')
-stoneAgePool = list(filter(lambda card: card.age == Age.STONE, pool))
-ironAgePool = list(filter(lambda card: card.age == Age.IRON, pool))
-crystalAgePool = list(filter(lambda card: card.age == Age.CRYSTAL, pool))
-strongPool = list(filter(lambda card: card.race == Race.BEASTMAN, pool))
-weakPool = list(filter(lambda card: card.race != Race.BEASTMAN, pool))
-
-random = sample(pool, 20)
-# deck2 = sample(pool, 20)
-# deck2 = sample(list(filter(lambda card: card.age != Age.CRYSTAL, pool)), 20)
-deck2 = stoneAgePool + sample(ironAgePool, 20 - len(stoneAgePool))
-decks = {}
-decks['even'] = stoneAgePool[0:7] + ironAgePool[0:7] + crystalAgePool[0:6]
-decks['stoneOnly'] = stoneAgePool + stoneAgePool[-5:0]
-decks['ironOnly'] = ironAgePool + ironAgePool[-5:0]
-decks['crystalOnly'] = crystalAgePool + crystalAgePool[-5:0]
-decks['stoneIron'] = stoneAgePool[0:10] + ironAgePool[0:10]
-decks['stoneCrystal'] = stoneAgePool[0:10] + crystalAgePool[0:10]
-decks['ironCrystal'] = ironAgePool[0:10] + crystalAgePool[0:10]
-decks['stoneMostly'] = stoneAgePool + stoneAgePool[-3:0] + ironAgePool[0:2]
-decks['stoneThresholdIronMostly'] = stoneAgePool[0:4] + ironAgePool + ironAgePool[-1:0]
-decks['stoneThresholdEven'] = stoneAgePool[0:4] + ironAgePool[0:8] + crystalAgePool[0:8]
-decks['strong'] = stoneAgePool[0:5] + ironAgePool[0:5] + crystalAgePool[0:10]
-for i in range(20 - len(decks)):
-    # multi sample makes it more possible that we repeat cards more which causes more variety in deck breakdown.
-    decks[f'rand{i}'] = sample(strongPool, 4) + sample(strongPool, 4) + sample(strongPool, 4) + sample(weakPool, 4) + sample(weakPool, 4)
-
-winPct = []
-for name1, deck1 in decks.items():
-    print('{0}{1}'.format(name1, deck_summary(deck1)))
-    wins = 0
-    for name2, deck2 in decks.items():
-        m = match(deck1, deck2)
-        if m > 0:
-            wins += 1
-        # print(f'{name1} vs {name2}: {m}')
-    winPct.append((name1, wins / len(decks) * 100))
-print()
-
-winPct = sorted(winPct, key=lambda t: t[1], reverse=True)
-for name, pct in winPct:
-    print('{0} win%: {1:.0f}'.format(name, pct))
-
-# print('\niron only {0}'.format(deck_summary(decks['ironOnly'])))
-# print('\nstone threshold {0}'.format(deck_summary(decks['stoneThresholdIronMostly'])))
-
-# print(f'Deck1:\n{deck1}')
-# print(f'Deck2:\n{deck2}')
-# # print('')
-
-# print(f'Deck1{deck_summary(deck1)}')
-# print(f'Deck2{deck_summary(deck2)}')
-
-# print('\nMatch: {0}'.format(match(decks['ironOnly'], decks['stoneThresholdIronMostly'], True)))
+    return f'(stone={deck_count(Age.STONE, deck, True)}s,{deck_count(Age.STONE, deck, False)}w;iron={deck_count(Age.IRON, deck, True)}s,{deck_count(Age.IRON, deck, False)}w;crystal={deck_count(Age.CRYSTAL, deck, True)}s,{deck_count(Age.CRYSTAL, deck, False)}w)'

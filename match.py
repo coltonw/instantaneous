@@ -35,11 +35,19 @@ def match(deck1, deck2, verbose=False):
     return _age(2, deck1, deck2) + ironBonus
 
 
-def deck_count(age, deck, strong):
+def deck_count_old(age, deck, strong):
     if strong:
         return reduce(lambda acc, card: acc + (card.age == age and card.mod == Mod.STRONG), deck, 0)
     return reduce(lambda acc, card: acc + (card.age == age and card.mod != Mod.STRONG), deck, 0)
 
 
+def deck_summary_old(deck):
+    return f'(stone={deck_count_old(Age.STONE, deck, True)}s,{deck_count_old(Age.STONE, deck, False)}w;iron={deck_count_old(Age.IRON, deck, True)}s,{deck_count_old(Age.IRON, deck, False)}w;crystal={deck_count_old(Age.CRYSTAL, deck, True)}s,{deck_count_old(Age.CRYSTAL, deck, False)}w)'
+
+
+def age_count(age, deck):
+    return reduce(lambda acc, card: acc + (card.age == age), deck, 0)
+
+
 def deck_summary(deck):
-    return f'(stone={deck_count(Age.STONE, deck, True)}s,{deck_count(Age.STONE, deck, False)}w;iron={deck_count(Age.IRON, deck, True)}s,{deck_count(Age.IRON, deck, False)}w;crystal={deck_count(Age.CRYSTAL, deck, True)}s,{deck_count(Age.CRYSTAL, deck, False)}w)'
+    return f'(stone={age_count(Age.STONE, deck)},{_deck_strength(0, deck, [])}str;iron={age_count(Age.IRON, deck)},{_deck_strength(1, deck, [])}str;crystal={age_count(Age.CRYSTAL, deck)},{_deck_strength(2, deck, [])}str)'

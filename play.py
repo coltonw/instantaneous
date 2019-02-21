@@ -84,13 +84,20 @@ def display_cards(cards):
             print(cardStr)
 
 
-# deckMap = {}
-# idea: input comma separated ints to enable or negative ints to disable cards in your deck
-# while True:
-#     deckChange = input('How?')
-
-
 display_cards(pool)
+
+deckMap = {}
+# idea: input comma separated ints to enable or negative ints to disable cards in your deck
+while len(deckMap) != DECK_SIZE:
+    deckChange = input('?')
+    changes = deckChange.split(',')
+    for change in changes:
+        # cannot remove 0?
+        if change.startswith('-'):
+            del deckMap[abs(int(change))]
+        else:
+            deckMap[int(change)] = pool[int(change)]
+    print(f'{sorted(list(deckMap.keys()))}, len: {len(deckMap)}')
 
 
 # print(f'Pool:\n{pool}\n')
@@ -101,13 +108,15 @@ display_cards(pool)
 # weakPool = list(filter(lambda card: card.race != Race.BEASTMAN, pool))
 
 decks = {}
+decks['YOU'] = deckMap.values()
+display_cards(decks['YOU'])
 decks['even'] = ai.even(pool)
 # decks['stoneOnly'] = stoneAgePool + stoneAgePool[-5:0]
 # decks['ironOnly'] = ironAgePool + ironAgePool[-5:0]
 # decks['crystalOnly'] = crystalAgePool + crystalAgePool[-5:0]
 decks['stoneIron'] = ai.stone_iron(pool)
 # decks['stoneCrystal'] = stoneAgePool[0:10] + crystalAgePool[0:10]
-# decks['ironCrystal'] = ironAgePool[0:10] + crystalAgePool[0:10]
+decks['ironCrystal'] = ai.iron_crystal(pool)
 # decks['stoneMostly'] = stoneAgePool + stoneAgePool[-3:0] + ironAgePool[0:2]
 # decks['stoneThresholdIronMostly'] = stoneAgePool[0:4] + ironAgePool + ironAgePool[-1:0]
 decks['stoneThresholdEven'] = ai.low_stone(pool)
@@ -124,7 +133,8 @@ for name1, deck1 in decks.items():
         m = match(deck1, deck2)
         if m > 0:
             wins += 1
-        # print(f'{name1} vs {name2}: {m}')
+        if name1 == 'YOU':
+            print(f'{name1} vs {name2}: {m}')
     winPct.append((name1, wins / len(decks) * 100))
 print()
 

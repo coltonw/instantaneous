@@ -11,7 +11,9 @@ def deck_sample(deck, samplePool, sampleSize=DECK_SIZE):
 # this is an arbitrary card strength value used for sorting
 def get_card_relative_strength(card):
     if card.mod == Mod.STRONG:
-        return 2
+        return 3
+    if card.mod == Mod.EASY_SYNERGY:
+        return 3
     elif card.mod == Mod.WEAK:
         return -1
     elif card.mod != Mod.NORMAL:

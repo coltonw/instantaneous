@@ -87,18 +87,20 @@ def display_cards(cards):
 display_cards(pool)
 
 deckMap = {}
-# idea: input comma separated ints to enable or negative ints to disable cards in your deck
-while len(deckMap) != DECK_SIZE:
-    deckChange = input('?')
-    changes = deckChange.split(',')
-    for change in changes:
-        # cannot remove 0?
-        if change.startswith('-'):
-            del deckMap[abs(int(change))]
-        else:
-            deckMap[int(change)] = pool[int(change)]
-    print(f'{sorted(list(deckMap.keys()))}, len: {len(deckMap)}')
-
+try:
+    # idea: input comma separated ints to enable or negative ints to disable cards in your deck
+    while len(deckMap) != DECK_SIZE:
+        deckChange = input('?')
+        changes = deckChange.split(',')
+        for change in changes:
+            # cannot remove 0?
+            if change.startswith('-'):
+                del deckMap[abs(int(change))]
+            else:
+                deckMap[int(change)] = pool[int(change)]
+        print(f'{sorted(list(deckMap.keys()))}, len: {len(deckMap)}')
+except ValueError:
+    print('Skipping your deck')
 
 # print(f'Pool:\n{pool}\n')
 # stoneAgePool = list(filter(lambda card: card.age == Age.STONE, pool))
@@ -108,8 +110,9 @@ while len(deckMap) != DECK_SIZE:
 # weakPool = list(filter(lambda card: card.race != Race.BEASTMAN, pool))
 
 decks = {}
-decks['YOU'] = deckMap.values()
-display_cards(decks['YOU'])
+if len(deckMap) == DECK_SIZE:
+    decks['YOU'] = deckMap.values()
+    display_cards(decks['YOU'])
 decks['even'] = ai.even(pool)
 # decks['stoneOnly'] = stoneAgePool + stoneAgePool[-5:0]
 # decks['ironOnly'] = ironAgePool + ironAgePool[-5:0]

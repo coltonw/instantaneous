@@ -11,8 +11,8 @@ class Age(Enum):
 
 class Race(Enum):
     BEASTMAN = auto()
-    UNDEAD = auto()
     HUMAN = auto()
+    UNDEAD = auto()
 
 
 class Profession(Enum):
@@ -26,6 +26,7 @@ class Profession(Enum):
 
 class Mod(Enum):
     NORMAL = auto()
+    # DELETE = auto()
     WEAK = auto()
     STRONG = auto()
     EASY_SYNERGY = auto()
@@ -40,9 +41,13 @@ BASE_STRENGTH = {
     Age.CRYSTAL: [0, 0, 8]
 }
 EASY_PROF_SYNERGY_THRESHOLD = 5
-HARD_PROF_SYNERGY_THRESHOLD = 8
 EASY_RACE_SYNERGY_THRESHOLD = 9
+
+HARD_PROF_SYNERGY_THRESHOLD = 8
 HARD_RACE_SYNERGY_THRESHOLD = 16
+
+PROF_COUNTER_THRESHOLD = 6
+RACE_COUNTER_THRESHOLD = 10
 
 
 class Card:
@@ -83,7 +88,11 @@ def generate_basic_pool():
     return pool
 
 
-# TODO: should cards be affected by their own types?  Should race synergies and prof synergies happen equally often?
+def _weaken(strength):
+    return list(map(lambda stre: stre - 1 if stre > 0 else 0, strength))
+
+
+# TODO: Should race synergies and prof synergies happen equally often?
 def generate_easy_synergy(card):
     card.mod = Mod.EASY_SYNERGY
     synergy = choice(list(Race) + USEFUL_PROFS)
@@ -102,7 +111,7 @@ def generate_easy_synergy(card):
 
 def generate_hard_synergy(card):
     card.mod = Mod.HARD_SYNERGY
-    card.strength = list(map(lambda str: str - 1 if str > 0 else 0, card.strength))
+    card.strength = _weaken(card.strength)
     synergy = choice(list(Race) + USEFUL_PROFS)
     threshold = HARD_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else HARD_PROF_SYNERGY_THRESHOLD
 
@@ -117,24 +126,94 @@ def generate_hard_synergy(card):
     card.desc = f'{threshold}+ {synergy.name.lower().capitalize()} for +{1 + ceil(card.age.value * 1.5)}str'
 
 
+# how do counters work? Are they unbounded? Are they based on counts?
+def generate_counter(card):
+    card.mod = Mod.COUNTER
+    card.strength = _weaken(card.strength)
+    counter = choice(list(Race) + USEFUL_PROFS)
+    threshold = RACE_COUNTER_THRESHOLD if isinstance(counter, Race) else PROF_COUNTER_THRESHOLD
+
+    def calc_synergy_strength(self, ageIdx, deck, oppDeck):
+        if self.strength[ageIdx] == 0:
+            return 0
+        counteredCards = filter(lambda c: c.prof == counter or c.race == counter, oppDeck)
+        if sum(1 for x in counteredCards) >= threshold:
+            return self.strength[ageIdx] + 1 + ceil(self.age.value * 1.5)
+        return self.strength[ageIdx]
+    card.set_synergy(calc_synergy_strength)
+    card.desc = f'facing {threshold}+ {counter.name.lower().capitalize()} for +{1 + ceil(card.age.value * 1.5)}str'
+
+
+cardModOddsTable = {
+    Profession.ALCHEMIST: {
+        Mod.WEAK: .1,
+        Mod.STRONG: .1,
+        Mod.EASY_SYNERGY: .1,
+        Mod.HARD_SYNERGY: .1,
+        Mod.COUNTER: .1
+    },
+    Profession.BATTLETECH: {
+        Mod.WEAK: .1,
+        Mod.STRONG: .1,
+        Mod.EASY_SYNERGY: .1,
+        Mod.HARD_SYNERGY: .1,
+        Mod.COUNTER: .1
+    },
+    Profession.CONJUROR: {
+        Mod.WEAK: .1,
+        Mod.STRONG: .1,
+        Mod.EASY_SYNERGY: .1,
+        Mod.HARD_SYNERGY: .1,
+        Mod.COUNTER: .1
+    },
+    Profession.PROPHET: {
+        Mod.WEAK: .1,
+        Mod.STRONG: .1,
+        Mod.EASY_SYNERGY: .1,
+        Mod.HARD_SYNERGY: .1,
+        Mod.COUNTER: .1
+    },
+    Profession.WOODSMAN: {
+        Mod.WEAK: .1,
+        Mod.STRONG: .1,
+        Mod.EASY_SYNERGY: .1,
+        Mod.HARD_SYNERGY: .1,
+        Mod.COUNTER: .1
+    },
+    Profession.PEASANT: {
+        Mod.WEAK: .2
+    }
+}
+
+
+def modify_card(card, mod):
+    if mod == Mod.STRONG:
+        # stronger card
+        card.mod = Mod.STRONG
+        card.strength = list(map(lambda str: str + card.age.value if str > 0 else 0, card.strength))
+    if mod == Mod.WEAK:
+        # stronger card
+        card.mod = Mod.WEAK
+        card.strength = _weaken(card.strength)
+    elif mod == Mod.EASY_SYNERGY:
+        # easy synergy
+        generate_easy_synergy(card)
+    elif mod == Mod.HARD_SYNERGY:
+        # hard synergy
+        generate_hard_synergy(card)
+    elif mod == Mod.COUNTER:
+        # counter
+        generate_counter(card)
+
+
 def generate_pool():
     pool = generate_basic_pool()
     for card in pool:
-        if card.prof == Profession.PEASANT:
-            continue
         r = random()
-        if r < .1:
-            # stronger card
-            card.mod = Mod.STRONG
-            card.strength = list(map(lambda str: str + card.age.value if str > 0 else 0, card.strength))
-        elif r < .2:
-            # easy synergy
-            generate_easy_synergy(card)
-        elif r < .3:
-            # hard synergy
-            generate_hard_synergy(card)
-        elif r < .4:
-            # counter
-            card.mod = Mod.COUNTER
-            card.desc = 'counter'
+        currentOdds = 0
+        for mod, odds in cardModOddsTable[card.prof].items():
+            currentOdds += odds
+            if r < currentOdds:
+                modify_card(card, mod)
+                break
     return pool

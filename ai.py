@@ -1,5 +1,5 @@
 from random import sample, shuffle
-from card import BASE_STRENGTH, Age
+from card import Age, Mod
 from match import DECK_SIZE
 
 
@@ -10,9 +10,11 @@ def deck_sample(deck, samplePool, sampleSize=DECK_SIZE):
 
 # this is an arbitrary card strength value used for sorting
 def get_card_relative_strength(card):
-    if card.strength > BASE_STRENGTH[card.age]:
+    if card.mod == Mod.STRONG:
         return 2
-    elif len(card.desc) > 0:
+    elif card.mod == Mod.WEAK:
+        return -1
+    elif card.mod != Mod.NORMAL:
         return 1
     return 0
 
@@ -33,10 +35,10 @@ def get_age_pools(basePool):
 
 def strong(basePool):
     pool = basePool[:]
-    strong = [card for card in pool if card.strength > BASE_STRENGTH[card.age]]
+    strong = [card for card in pool if card.mod == Mod.STRONG]
     deck = deck_sample([], strong)
     if len(deck) < DECK_SIZE:
-        weak = [card for card in pool if card.strength <= BASE_STRENGTH[card.age]]
+        weak = [card for card in pool if card.mod != Mod.STRONG]
         deck = deck_sample(deck, weak)
     return deck
 

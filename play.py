@@ -11,26 +11,29 @@ box = {
     'lb': '├', 'rb': '┤', 'tb': '┬', 'bb': '┴',
     'cross': '┼'
 }
-cardInnerWidth = 18
+cardInnerWidth = 12
 cardInnerHeight = 8
 
 
-def in_card(thing, fill=' '):
+def in_card(thing, fill=' ', capitalize=True):
     thing = getattr(thing, 'name', thing)
-    return str(thing)[:cardInnerWidth].lower().capitalize().ljust(cardInnerWidth, fill)
+    line = str(thing)[:cardInnerWidth].ljust(cardInnerWidth, fill)
+    if capitalize:
+        return line.lower().capitalize()
+    return line
 
 
-def add_detail_to_card(cardDispArr, detail):
+def add_detail_to_card(cardDispArr, detail, capitalize=True):
     if len(cardDispArr) == 0:
-        cardDispArr.append(in_card(detail, box['h']) + box['tb'])
+        cardDispArr.append(in_card(detail, box['h'], capitalize) + box['tb'])
     elif len(cardDispArr) < cardInnerHeight + 1:
-        cardDispArr.append(in_card(detail) + box['v'])
+        cardDispArr.append(in_card(detail, capitalize=capitalize) + box['v'])
 
 
-def add_multiline_detail_to_card(cardDispArr, detail):
+def add_multiline_detail_to_card(cardDispArr, detail, capitalize=True):
     detailArr = wrap(detail, cardInnerWidth)
     for subdetail in detailArr:
-        add_detail_to_card(cardDispArr, subdetail)
+        add_detail_to_card(cardDispArr, subdetail, capitalize=capitalize)
 
 
 def init_card_row():
@@ -64,12 +67,12 @@ def display_cards(cards):
     cardRows = [init_card_row()]
     for i, card in enumerate(cards):
         add_detail_to_card(cardDispArr, i)
-        add_detail_to_card(cardDispArr, str(card.strength) + 'str')
+        add_detail_to_card(cardDispArr, '/'.join(map(str, card.strength)))
         add_detail_to_card(cardDispArr, card.age)
         add_detail_to_card(cardDispArr, card.prof)
         add_detail_to_card(cardDispArr, card.race)
         add_detail_to_card(cardDispArr, '')
-        add_multiline_detail_to_card(cardDispArr, card.desc)
+        add_multiline_detail_to_card(cardDispArr, card.desc, capitalize=False)
         finish_card(cardRows, cardDispArr)
         cardDispArr = []
     if len(cardRows[-1][0]) == 1:

@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from random import random
+from random import random, choice
 
 
 class Age(Enum):
@@ -14,26 +14,46 @@ class Race(Enum):
     HUMAN = auto()
 
 
-# should we add none / peasant?
 class Profession(Enum):
     ALCHEMIST = auto()
     BATTLETECH = auto()
     CONJUROR = auto()
     PROPHET = auto()
     WOODSMAN = auto()
+    PEASANT = auto()
 
 
-BASE_STRENGTH = {Age.STONE: 3, Age.IRON: 5, Age.CRYSTAL: 8}
+class Mod(Enum):
+    NORMAL = auto()
+    WEAK = auto()
+    STRONG = auto()
+    EASY_SYNERGY = auto()
+    HARD_SYNERGY = auto()
+    COUNTER = auto()
+
+
+USEFUL_PROFS = [prof for prof in list(Profession) if prof != Profession.PEASANT]
+BASE_STRENGTH = {
+    Age.STONE: [3, 3, 3],
+    Age.IRON: [0, 5, 5],
+    Age.CRYSTAL: [0, 0, 8]
+}
+EASY_PROF_SYNERGY_THRESHOLD = 5
+HARD_PROF_SYNERGY_THRESHOLD = 8
+EASY_RACE_SYNERGY_THRESHOLD = 9
+HARD_RACE_SYNERGY_THRESHOLD = 16
 
 
 class Card:
 
-    def __init__(self, strength, age, race, prof, desc=''):
+    def __init__(self, strength, age, race, prof, desc='', mod=Mod.NORMAL, synergy=lambda a, b, c, d: 0):
         self.strength = strength
         self.age = age
         self.race = race
         self.prof = prof
         self.desc = desc
+        self.mod = mod
+        self.synergy = synergy
 
     def __repr__(self):
         return f'Card({self.strength},{self.age},{self.race},{self.prof},{self.desc})'
@@ -41,8 +61,11 @@ class Card:
     def __str__(self):
         return repr(self)
 
-    def calcStrength(self, deck, oppDeck):
-        return self.strength
+    def set_synergy(self, synergy):
+        self.synergy = synergy
+
+    def calc_strength(self, ageIdx, deck, oppDeck):
+        return self.strength[ageIdx] + self.synergy(self, ageIdx, deck, oppDeck)
 
 
 def generate_basic_pool():
@@ -50,7 +73,8 @@ def generate_basic_pool():
     for age in Age:
         for race in Race:
             for prof in Profession:
-                strength = BASE_STRENGTH[age]
+                strength = BASE_STRENGTH[age][:]
+                # TODO delete as part of the normal generate pool function
                 if random() > .1:
                     pool.append(Card(strength, age, race, prof))
                 if age != Age.CRYSTAL and random() > .1:
@@ -58,20 +82,40 @@ def generate_basic_pool():
     return pool
 
 
+# TODO: should cards be affected by their own types?  Should race synergies and prof synergies happen equally often?
+def generate_easy_synergy(card):
+    synergy = choice(list(Race) + USEFUL_PROFS)
+    threshold = EASY_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else EASY_PROF_SYNERGY_THRESHOLD
+
+    def calc_synergy_strength(self, ageIdx, deck, oppDeck):
+        synergisticCards = filter(lambda c: c.prof == synergy or c.race == synergy, deck)
+        if sum(1 for x in synergisticCards) >= threshold:
+            return self.strength[ageIdx] + self.age.value
+        return self.strength[ageIdx]
+    card.set_synergy(calc_synergy_strength)
+    card.desc = f'{threshold}+ {synergy.name.lower().capitalize()} for +{card.age.value}str'
+
+
 def generate_pool():
     pool = generate_basic_pool()
     for card in pool:
+        if card.prof == Profession.PEASANT:
+            continue
         r = random()
         if r < .1:
             # stronger card
-            card.strength = card.strength + card.age.value
+            card.mod = Mod.STRONG
+            card.strength = list(map(lambda str: str + card.age.value if str > 0 else 0, card.strength))
         elif r < .2:
             # easy synergy
-            card.desc = 'easy synergy which has a super long desc which would never fit on a card ever because it is way too long'
+            card.mod = Mod.EASY_SYNERGY
+            generate_easy_synergy(card)
         elif r < .3:
-            # tough synergy
-            card.desc = 'tough synergy'
+            # hard synergy
+            card.mod = Mod.HARD_SYNERGY
+            card.desc = 'hard synergy'
         elif r < .4:
             # counter
+            card.mod = Mod.COUNTER
             card.desc = 'counter'
     return pool

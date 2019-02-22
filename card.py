@@ -52,7 +52,7 @@ RACE_COUNTER_THRESHOLD = 10
 
 class Card:
 
-    def __init__(self, strength, age, race, prof, desc='', mod=Mod.NORMAL, synergy=lambda a, b, c, d: 0):
+    def __init__(self, strength, age, race, prof, desc='', mod=Mod.NORMAL, synergy=None, calc=lambda self, ageIdx, d, o: self.strength[ageIdx]):
         self.strength = strength
         self.age = age
         self.race = race
@@ -60,6 +60,7 @@ class Card:
         self.desc = desc
         self.mod = mod
         self.synergy = synergy
+        self.calc = calc
 
     def __repr__(self):
         return f'Card({self.strength},{self.age},{self.race},{self.prof},{self.desc})'
@@ -67,11 +68,8 @@ class Card:
     def __str__(self):
         return repr(self)
 
-    def set_synergy(self, synergy):
-        self.synergy = synergy
-
     def calc_strength(self, ageIdx, deck, oppDeck):
-        return self.strength[ageIdx] + self.synergy(self, ageIdx, deck, oppDeck)
+        return self.calc(self, ageIdx, deck, oppDeck)
 
 
 def generate_basic_pool():
@@ -105,7 +103,8 @@ def generate_easy_synergy(card):
         if sum(1 for x in synergisticCards) >= threshold:
             return self.strength[ageIdx] + self.age.value
         return self.strength[ageIdx]
-    card.set_synergy(calc_synergy_strength)
+    card.calc = calc_synergy_strength
+    card.synergy = synergy
     card.desc = f'{threshold}+ {synergy.name.lower().capitalize()} for +{card.age.value}str'
 
 
@@ -122,7 +121,8 @@ def generate_hard_synergy(card):
         if sum(1 for x in synergisticCards) >= threshold:
             return self.strength[ageIdx] + 1 + ceil(self.age.value * 1.5)
         return self.strength[ageIdx]
-    card.set_synergy(calc_synergy_strength)
+    card.calc = calc_synergy_strength
+    card.synergy = synergy
     card.desc = f'{threshold}+ {synergy.name.lower().capitalize()} for +{1 + ceil(card.age.value * 1.5)}str'
 
 
@@ -140,7 +140,8 @@ def generate_counter(card):
         if sum(1 for x in counteredCards) >= threshold:
             return self.strength[ageIdx] + 1 + ceil(self.age.value * 1.5)
         return self.strength[ageIdx]
-    card.set_synergy(calc_synergy_strength)
+    card.calc = calc_synergy_strength
+    card.synergy = counter
     card.desc = f'facing {threshold}+ {counter.name.lower().capitalize()} for +{1 + ceil(card.age.value * 1.5)}str'
 
 

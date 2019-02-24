@@ -1,10 +1,10 @@
 import shutil
+import sys
 from textwrap import wrap
-from card import generate_pool
+from card import generate_pool, Race, Profession
 from match import DECK_SIZE, match, deck_summary
 import ai
 
-pool = generate_pool()
 box = {
     'h': '─', 'v': '│',
     'tl': '┌', 'tr': '┐', 'bl': '└', 'br': '┘',
@@ -84,23 +84,24 @@ def display_cards(cards):
             print(cardStr)
 
 
-display_cards(pool)
-
-deckMap = {}
-try:
-    # idea: input comma separated ints to enable or negative ints to disable cards in your deck
-    while len(deckMap) != DECK_SIZE:
-        deckChange = input('?')
-        changes = deckChange.split(',')
-        for change in changes:
-            # cannot remove 0?
-            if change.startswith('-'):
-                del deckMap[abs(int(change))]
-            else:
-                deckMap[int(change)] = pool[int(change)]
-        print(f'{sorted(list(deckMap.keys()))}, len: {len(deckMap)}')
-except ValueError:
-    print('Skipping your deck')
+# TODO: fis this?
+def play():
+    pool = generate_pool()
+    deckMap = {}
+    try:
+        # idea: input comma separated ints to enable or negative ints to disable cards in your deck
+        while len(deckMap) != DECK_SIZE:
+            deckChange = input('?')
+            changes = deckChange.split(',')
+            for change in changes:
+                # cannot remove 0?
+                if change.startswith('-'):
+                    del deckMap[abs(int(change))]
+                else:
+                    deckMap[int(change)] = pool[int(change)]
+            print(f'{sorted(list(deckMap.keys()))}, len: {len(deckMap)}')
+    except ValueError:
+        print('Skipping your deck')
 
 # print(f'Pool:\n{pool}\n')
 # stoneAgePool = list(filter(lambda card: card.age == Age.STONE, pool))
@@ -109,38 +110,61 @@ except ValueError:
 # strongPool = list(filter(lambda card: card.race == Race.BEASTMAN, pool))
 # weakPool = list(filter(lambda card: card.race != Race.BEASTMAN, pool))
 
-decks = {}
-if len(deckMap) == DECK_SIZE:
-    decks['YOU'] = deckMap.values()
-    display_cards(decks['YOU'])
-decks['even'] = ai.even(pool)
-# decks['stoneOnly'] = stoneAgePool + stoneAgePool[-5:0]
-# decks['ironOnly'] = ironAgePool + ironAgePool[-5:0]
-# decks['crystalOnly'] = crystalAgePool + crystalAgePool[-5:0]
-decks['stoneIron'] = ai.stone_iron(pool)
-# decks['stoneCrystal'] = stoneAgePool[0:10] + crystalAgePool[0:10]
-decks['ironCrystal'] = ai.iron_crystal(pool)
-# decks['stoneMostly'] = stoneAgePool + stoneAgePool[-3:0] + ironAgePool[0:2]
-# decks['stoneThresholdIronMostly'] = stoneAgePool[0:4] + ironAgePool + ironAgePool[-1:0]
-decks['stoneThresholdEven'] = ai.low_stone(pool)
-# decks['strong'] = stoneAgePool[0:5] + ironAgePool[0:5] + crystalAgePool[0:10]
-for i in range(DECK_SIZE - len(decks)):
-    # multi sample makes it more possible that we repeat cards more which causes more variety in deck breakdown.
-    decks[f'rand{i}'] = ai.strong(pool)
+
+def simulate(pool, wins, gamesPlayed, yourDeck=None):
+    decks = {}
+    if yourDeck and len(yourDeck) == DECK_SIZE:
+        decks['YOU'] = yourDeck.values()
+        display_cards(decks['YOU'])
+    decks['even'] = ai.even(pool)
+    # decks['stoneOnly'] = stoneAgePool + stoneAgePool[-5:0]
+    # decks['ironOnly'] = ironAgePool + ironAgePool[-5:0]
+    # decks['crystalOnly'] = crystalAgePool + crystalAgePool[-5:0]
+    decks['stoneIron'] = ai.stone_iron(pool)
+    # decks['stoneCrystal'] = stoneAgePool[0:10] + crystalAgePool[0:10]
+    decks['ironCrystal'] = ai.iron_crystal(pool)
+    # decks['stoneMostly'] = stoneAgePool + stoneAgePool[-3:0] + ironAgePool[0:2]
+    # decks['stoneThresholdIronMostly'] = stoneAgePool[0:4] + ironAgePool + ironAgePool[-1:0]
+    decks['stoneThresholdEven'] = ai.low_stone(pool)
+    # decks['strong'] = stoneAgePool[0:5] + ironAgePool[0:5] + crystalAgePool[0:10]
+    decks['maxHardSynergy'] = ai.max_hard_synergy(pool)
+    for race in Race:
+        decks[f'{race.name.lower()}HardSynergy'] = ai.hard_synergy(pool, race)
+    for prof in Profession:
+        decks[f'{prof.name.lower()}HardSynergy'] = ai.hard_synergy(pool, prof)
+    for i in range(21 - len(decks)):
+        # multi sample makes it more possible that we repeat cards more which causes more variety in deck breakdown.
+        decks[f'rand{i}'] = ai.strong(pool)
+
+    for name1, deck1 in decks.items():
+        # print('{0}{1}'.format(name1, deck_summary(deck1)))
+        for name2, deck2 in decks.items():
+            m = match(deck1, deck2)
+            if m > 0:
+                wins[name1] = wins.get(name1, 0) + 1
+            if name1 == 'YOU':
+                print(f'{name1} vs {name2}: {m}')
+        # wins.append((name1, wins / (len(decks) - 1) * 100))
+    gamesPlayed += len(decks) - 1
+    return (wins, gamesPlayed)
+
+
+wins = {}
+gamesPlayed = 0
+sims = 10
+try:
+    sims = int(sys.argv[1])
+    print(f'simulating {sims} times')
+except (IndexError, ValueError):
+    print('simualting 10 times')
+for i in range(sims):
+    pool = generate_pool()
+    (wins, gamesPlayed) = simulate(pool, wins, gamesPlayed)
+
 
 winPct = []
-for name1, deck1 in decks.items():
-    print('{0}{1}'.format(name1, deck_summary(deck1)))
-    wins = 0
-    for name2, deck2 in decks.items():
-        m = match(deck1, deck2)
-        if m > 0:
-            wins += 1
-        if name1 == 'YOU':
-            print(f'{name1} vs {name2}: {m}')
-    winPct.append((name1, wins / len(decks) * 100))
-print()
-
+for deckName, wins in wins.items():
+    winPct.append((deckName, wins / gamesPlayed * 100))
 winPct = sorted(winPct, key=lambda t: t[1], reverse=True)
 for name, pct in winPct:
     print('{0} win%: {1:.0f}'.format(name, pct))

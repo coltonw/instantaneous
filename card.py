@@ -44,15 +44,17 @@ EASY_PROF_SYNERGY_THRESHOLD = 5
 EASY_RACE_SYNERGY_THRESHOLD = 9
 
 HARD_PROF_SYNERGY_THRESHOLD = 8
-HARD_RACE_SYNERGY_THRESHOLD = 16
+HARD_RACE_SYNERGY_THRESHOLD = 14
 
 PROF_COUNTER_THRESHOLD = 6
 RACE_COUNTER_THRESHOLD = 10
 
 
 class Card:
+    cardId = 1
 
     def __init__(self, strength, age, race, prof, desc='', mod=Mod.NORMAL, synergy=None, calc=lambda self, ageIdx, d, o: self.strength[ageIdx]):
+        self.cardId = Card.cardId
         self.strength = strength
         self.age = age
         self.race = race
@@ -61,6 +63,7 @@ class Card:
         self.mod = mod
         self.synergy = synergy
         self.calc = calc
+        Card.cardId += 1
 
     def __repr__(self):
         return f'Card({self.strength},{self.age},{self.race},{self.prof},{self.desc})'
@@ -90,6 +93,9 @@ def _weaken(strength):
     return list(map(lambda stre: stre - 1 if stre > 0 else 0, strength))
 
 
+def synergy_count(deck, synergy):
+    return sum(c.prof == synergy or c.race == synergy for c in deck)
+
 # TODO: Should race synergies and prof synergies happen equally often?
 def generate_easy_synergy(card):
     card.mod = Mod.EASY_SYNERGY
@@ -99,8 +105,7 @@ def generate_easy_synergy(card):
     def calc_synergy_strength(self, ageIdx, deck, oppDeck):
         if self.strength[ageIdx] == 0:
             return 0
-        synergisticCards = filter(lambda c: c.prof == synergy or c.race == synergy, deck)
-        if sum(1 for x in synergisticCards) >= threshold:
+        if synergy_count(deck, synergy) >= threshold:
             return self.strength[ageIdx] + self.age.value
         return self.strength[ageIdx]
     card.calc = calc_synergy_strength
@@ -117,8 +122,7 @@ def generate_hard_synergy(card):
     def calc_synergy_strength(self, ageIdx, deck, oppDeck):
         if self.strength[ageIdx] == 0:
             return 0
-        synergisticCards = filter(lambda c: c.prof == synergy or c.race == synergy, deck)
-        if sum(1 for x in synergisticCards) >= threshold:
+        if synergy_count(deck, synergy) >= threshold:
             return self.strength[ageIdx] + 1 + ceil(self.age.value * 1.5)
         return self.strength[ageIdx]
     card.calc = calc_synergy_strength
@@ -136,8 +140,7 @@ def generate_counter(card):
     def calc_synergy_strength(self, ageIdx, deck, oppDeck):
         if self.strength[ageIdx] == 0:
             return 0
-        counteredCards = filter(lambda c: c.prof == counter or c.race == counter, oppDeck)
-        if sum(1 for x in counteredCards) >= threshold:
+        if synergy_count(oppDeck, counter) >= threshold:
             return self.strength[ageIdx] + 1 + ceil(self.age.value * 1.5)
         return self.strength[ageIdx]
     card.calc = calc_synergy_strength
@@ -150,35 +153,35 @@ cardModOddsTable = {
         Mod.WEAK: .1,
         Mod.STRONG: .1,
         Mod.EASY_SYNERGY: .1,
-        Mod.HARD_SYNERGY: .1,
+        Mod.HARD_SYNERGY: .2,
         Mod.COUNTER: .1
     },
     Profession.BATTLETECH: {
         Mod.WEAK: .1,
         Mod.STRONG: .1,
         Mod.EASY_SYNERGY: .1,
-        Mod.HARD_SYNERGY: .1,
+        Mod.HARD_SYNERGY: .2,
         Mod.COUNTER: .1
     },
     Profession.CONJUROR: {
         Mod.WEAK: .1,
         Mod.STRONG: .1,
         Mod.EASY_SYNERGY: .1,
-        Mod.HARD_SYNERGY: .1,
+        Mod.HARD_SYNERGY: .2,
         Mod.COUNTER: .1
     },
     Profession.PROPHET: {
         Mod.WEAK: .1,
         Mod.STRONG: .1,
         Mod.EASY_SYNERGY: .1,
-        Mod.HARD_SYNERGY: .1,
+        Mod.HARD_SYNERGY: .2,
         Mod.COUNTER: .1
     },
     Profession.WOODSMAN: {
         Mod.WEAK: .1,
         Mod.STRONG: .1,
         Mod.EASY_SYNERGY: .1,
-        Mod.HARD_SYNERGY: .1,
+        Mod.HARD_SYNERGY: .2,
         Mod.COUNTER: .1
     },
     Profession.PEASANT: {

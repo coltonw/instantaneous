@@ -1,3 +1,4 @@
+import collections
 from random import sample, shuffle
 from card import Age, Mod, Profession, HARD_PROF_SYNERGY_THRESHOLD, HARD_RACE_SYNERGY_THRESHOLD
 from match import DECK_SIZE
@@ -12,9 +13,9 @@ def deck_sample(deck, samplePool, sampleSize=DECK_SIZE):
 def get_card_relative_strength(card):
     if card.mod == Mod.STRONG:
         return 3
-    if card.mod == Mod.EASY_SYNERGY:
+    if card.mod == Mod.EASY_MATCHING_SYNERGY or card.mod == Mod.EASY_NONMATCHING_SYNERGY:
         return 2
-    elif card.mod == Mod.WEAK or card.mod == Mod.HARD_SYNERGY:
+    elif card.mod == Mod.WEAK or card.mod == Mod.HARD_MATCHING_SYNERGY or card.mod == Mod.HARD_NONMATCHING_SYNERGY:
         return -1
     elif card.mod != Mod.NORMAL:
         return 1
@@ -40,6 +41,8 @@ def finish_deck(basePool, deckMap):
     pool = basePool[:]
     shuffle(pool)
     pool = sort_by_strength(pool)
+    if not isinstance(deckMap, collections.Mapping):
+        deckMap = {card.cardId: card for card in deckMap}
     for card in pool:
         if len(deckMap) >= DECK_SIZE:
             break
@@ -98,6 +101,40 @@ def iron_crystal(basePool):
     return deck
 
 
+def stone_crystal(basePool):
+    (stone, iron, crystal) = get_age_pools(basePool)
+    deck = []
+    for i in range(DECK_SIZE):
+        if len(stone) > i:
+            deck = deck + [stone[i]]
+        if len(crystal) > i:
+            deck = deck + [crystal[i]]
+        if len(deck) >= DECK_SIZE:
+            return deck[0:20]
+    return deck
+
+
+def stone(basePool):
+    (stone, iron, crystal) = get_age_pools(basePool)
+    if len(stone) >= DECK_SIZE:
+        return stone[0:20]
+    return finish_deck(basePool, stone)
+
+
+def iron(basePool):
+    (stone, iron, crystal) = get_age_pools(basePool)
+    if len(iron) >= DECK_SIZE:
+        return iron[0:20]
+    return finish_deck(basePool, iron)
+
+
+def crystal(basePool):
+    (stone, iron, crystal) = get_age_pools(basePool)
+    if len(crystal) >= DECK_SIZE:
+        return crystal[0:20]
+    return finish_deck(basePool, crystal)
+
+
 def low_stone(basePool):
     (stone, iron, crystal) = get_age_pools(basePool)
     deck = []
@@ -131,7 +168,7 @@ def hard_synergy(basePool, synergy):
     pool = basePool[:]
     deckMap = {}
     for card in pool:
-        if card.mod == Mod.HARD_SYNERGY and card.synergy == synergy:
+        if (card.mod == Mod.HARD_MATCHING_SYNERGY or card.mod == Mod.HARD_NONMATCHING_SYNERGY) and card.synergy == synergy:
             deckMap[card.cardId] = card
     # print(synergy.name, len(deckMap))
     cardsNeeded = HARD_PROF_SYNERGY_THRESHOLD if isinstance(synergy, Profession) else HARD_RACE_SYNERGY_THRESHOLD
@@ -143,7 +180,7 @@ def max_hard_synergy(basePool):
     pool = basePool[:]
     hardSynergies = {}
     for card in pool:
-        if card.mod == Mod.HARD_SYNERGY:
+        if card.mod == Mod.HARD_NONMATCHING_SYNERGY or card.mod == Mod.HARD_NONMATCHING_SYNERGY:
             hardSynergies.setdefault(card.synergy, {}).update({card.cardId: card})
     maxSynergy = None
     maxSynergyCardDict = {}

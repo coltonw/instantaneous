@@ -117,11 +117,11 @@ def simulate(pool, wins, gamesPlayed, yourDeck=None):
         decks['YOU'] = yourDeck.values()
         display_cards(decks['YOU'])
     decks['even'] = ai.even(pool)
-    # decks['stoneOnly'] = stoneAgePool + stoneAgePool[-5:0]
-    # decks['ironOnly'] = ironAgePool + ironAgePool[-5:0]
-    # decks['crystalOnly'] = crystalAgePool + crystalAgePool[-5:0]
+    decks['stoneOnly'] = ai.stone(pool)
+    decks['ironOnly'] = ai.iron(pool)
+    decks['crystalOnly'] = ai.crystal(pool)
     decks['stoneIron'] = ai.stone_iron(pool)
-    # decks['stoneCrystal'] = stoneAgePool[0:10] + crystalAgePool[0:10]
+    decks['stoneCrystal'] = ai.stone_crystal(pool)
     decks['ironCrystal'] = ai.iron_crystal(pool)
     # decks['stoneMostly'] = stoneAgePool + stoneAgePool[-3:0] + ironAgePool[0:2]
     # decks['stoneThresholdIronMostly'] = stoneAgePool[0:4] + ironAgePool + ironAgePool[-1:0]

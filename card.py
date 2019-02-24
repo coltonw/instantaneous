@@ -26,11 +26,13 @@ class Profession(Enum):
 
 class Mod(Enum):
     NORMAL = auto()
-    # DELETE = auto()
+    DELETE = auto()
     WEAK = auto()
     STRONG = auto()
-    EASY_SYNERGY = auto()
-    HARD_SYNERGY = auto()
+    EASY_MATCHING_SYNERGY = auto()
+    EASY_NONMATCHING_SYNERGY = auto()
+    HARD_MATCHING_SYNERGY = auto()
+    HARD_NONMATCHING_SYNERGY = auto()
     COUNTER = auto()
 
 
@@ -44,7 +46,7 @@ EASY_PROF_SYNERGY_THRESHOLD = 5
 EASY_RACE_SYNERGY_THRESHOLD = 9
 
 HARD_PROF_SYNERGY_THRESHOLD = 8
-HARD_RACE_SYNERGY_THRESHOLD = 14
+HARD_RACE_SYNERGY_THRESHOLD = 15
 
 PROF_COUNTER_THRESHOLD = 6
 RACE_COUNTER_THRESHOLD = 10
@@ -81,10 +83,8 @@ def generate_basic_pool():
         for race in Race:
             for prof in Profession:
                 strength = BASE_STRENGTH[age][:]
-                # TODO delete as part of the normal generate pool function
-                if random() > .1:
-                    pool.append(Card(strength, age, race, prof))
-                if age != Age.CRYSTAL and random() > .1:
+                pool.append(Card(strength, age, race, prof))
+                if age != Age.CRYSTAL:
                     pool.append(Card(strength, age, race, prof))
     return pool
 
@@ -96,10 +96,16 @@ def _weaken(strength):
 def synergy_count(deck, synergy):
     return sum(c.prof == synergy or c.race == synergy for c in deck)
 
-# TODO: Should race synergies and prof synergies happen equally often?
-def generate_easy_synergy(card):
-    card.mod = Mod.EASY_SYNERGY
-    synergy = choice(list(Race) + USEFUL_PROFS)
+
+def generate_easy_synergy(card, matching):
+    choices = set([])
+    if matching:
+        card.mod = Mod.EASY_MATCHING_SYNERGY
+        choices = set([card.race, card.prof])
+    else:
+        card.mod = Mod.EASY_NONMATCHING_SYNERGY
+        choices = set(Race) | set(USEFUL_PROFS) - set([card.race, card.prof])
+    synergy = choice(list(choices))
     threshold = EASY_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else EASY_PROF_SYNERGY_THRESHOLD
 
     def calc_synergy_strength(self, ageIdx, deck, oppDeck):
@@ -113,10 +119,15 @@ def generate_easy_synergy(card):
     card.desc = f'{threshold}+ {synergy.name.lower().capitalize()} for +{card.age.value}str'
 
 
-def generate_hard_synergy(card):
-    card.mod = Mod.HARD_SYNERGY
-    card.strength = _weaken(card.strength)
-    synergy = choice(list(Race) + USEFUL_PROFS)
+def generate_hard_synergy(card, matching):
+    choices = set([])
+    if matching:
+        card.mod = Mod.HARD_MATCHING_SYNERGY
+        choices = set([card.race, card.prof])
+    else:
+        card.mod = Mod.HARD_NONMATCHING_SYNERGY
+        choices = set(Race) | set(USEFUL_PROFS) - set([card.race, card.prof])
+    synergy = choice(list(choices))
     threshold = HARD_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else HARD_PROF_SYNERGY_THRESHOLD
 
     def calc_synergy_strength(self, ageIdx, deck, oppDeck):
@@ -150,38 +161,53 @@ def generate_counter(card):
 
 cardModOddsTable = {
     Profession.ALCHEMIST: {
+        Mod.DELETE: .1,
         Mod.WEAK: .1,
         Mod.STRONG: .1,
-        Mod.EASY_SYNERGY: .1,
-        Mod.HARD_SYNERGY: .2,
+        Mod.EASY_MATCHING_SYNERGY: .1,
+        Mod.EASY_NONMATCHING_SYNERGY: .05,
+        Mod.HARD_MATCHING_SYNERGY: .15,
+        Mod.HARD_NONMATCHING_SYNERGY: .05,
         Mod.COUNTER: .1
     },
     Profession.BATTLETECH: {
+        Mod.DELETE: .1,
         Mod.WEAK: .1,
         Mod.STRONG: .1,
-        Mod.EASY_SYNERGY: .1,
-        Mod.HARD_SYNERGY: .2,
+        Mod.EASY_MATCHING_SYNERGY: .1,
+        Mod.EASY_NONMATCHING_SYNERGY: .05,
+        Mod.HARD_MATCHING_SYNERGY: .15,
+        Mod.HARD_NONMATCHING_SYNERGY: .05,
         Mod.COUNTER: .1
     },
     Profession.CONJUROR: {
+        Mod.DELETE: .1,
         Mod.WEAK: .1,
         Mod.STRONG: .1,
-        Mod.EASY_SYNERGY: .1,
-        Mod.HARD_SYNERGY: .2,
+        Mod.EASY_MATCHING_SYNERGY: .1,
+        Mod.EASY_NONMATCHING_SYNERGY: .05,
+        Mod.HARD_MATCHING_SYNERGY: .15,
+        Mod.HARD_NONMATCHING_SYNERGY: .05,
         Mod.COUNTER: .1
     },
     Profession.PROPHET: {
+        Mod.DELETE: .1,
         Mod.WEAK: .1,
         Mod.STRONG: .1,
-        Mod.EASY_SYNERGY: .1,
-        Mod.HARD_SYNERGY: .2,
+        Mod.EASY_MATCHING_SYNERGY: .1,
+        Mod.EASY_NONMATCHING_SYNERGY: .05,
+        Mod.HARD_MATCHING_SYNERGY: .15,
+        Mod.HARD_NONMATCHING_SYNERGY: .05,
         Mod.COUNTER: .1
     },
     Profession.WOODSMAN: {
+        Mod.DELETE: .1,
         Mod.WEAK: .1,
         Mod.STRONG: .1,
-        Mod.EASY_SYNERGY: .1,
-        Mod.HARD_SYNERGY: .2,
+        Mod.EASY_MATCHING_SYNERGY: .1,
+        Mod.EASY_NONMATCHING_SYNERGY: .05,
+        Mod.HARD_MATCHING_SYNERGY: .15,
+        Mod.HARD_NONMATCHING_SYNERGY: .05,
         Mod.COUNTER: .1
     },
     Profession.PEASANT: {
@@ -199,12 +225,18 @@ def modify_card(card, mod):
         # stronger card
         card.mod = Mod.WEAK
         card.strength = _weaken(card.strength)
-    elif mod == Mod.EASY_SYNERGY:
-        # easy synergy
-        generate_easy_synergy(card)
-    elif mod == Mod.HARD_SYNERGY:
-        # hard synergy
-        generate_hard_synergy(card)
+    elif mod == Mod.EASY_MATCHING_SYNERGY:
+        # easy matching synergy
+        generate_easy_synergy(card, True)
+    elif mod == Mod.EASY_NONMATCHING_SYNERGY:
+        # easy non-matching synergy
+        generate_easy_synergy(card, False)
+    elif mod == Mod.HARD_MATCHING_SYNERGY:
+        # hard matching synergy
+        generate_hard_synergy(card, True)
+    elif mod == Mod.HARD_NONMATCHING_SYNERGY:
+        # hard non-matching synergy
+        generate_hard_synergy(card, False)
     elif mod == Mod.COUNTER:
         # counter
         generate_counter(card)
@@ -220,4 +252,4 @@ def generate_pool():
             if r < currentOdds:
                 modify_card(card, mod)
                 break
-    return pool
+    return [c for c in pool if c.mod != Mod.DELETE]

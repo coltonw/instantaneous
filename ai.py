@@ -1,7 +1,18 @@
 import collections
+from enum import Flag, auto
 from random import sample, shuffle
 from card import Age, Mod, Profession, HARD_PROF_SYNERGY_THRESHOLD, HARD_RACE_SYNERGY_THRESHOLD
 from match import DECK_SIZE
+
+
+class Breakdown(Flag):
+    STONE = auto()
+    IRON = auto()
+    CRYSTAL = auto()
+    STONE_IRON = STONE | IRON
+    STONE_CRYSTAL = STONE | CRYSTAL
+    IRON_CRYSTAL = IRON | CRYSTAL
+    EVEN = STONE | IRON | CRYSTAL
 
 
 def deck_sample(deck, samplePool, sampleSize=DECK_SIZE):
@@ -26,14 +37,18 @@ def sort_by_strength(basePool):
     return sorted(basePool, key=get_card_relative_strength, reverse=True)
 
 
+def age_breakdown(cards):
+    cards = sort_by_strength(cards)
+    stone = [card for card in cards if card.age == Age.STONE]
+    iron = [card for card in cards if card.age == Age.IRON]
+    crystal = [card for card in cards if card.age == Age.CRYSTAL]
+    return (stone, iron, crystal)
+
+
 def get_age_pools(basePool):
     pool = basePool[:]
     shuffle(pool)
-    pool = sort_by_strength(pool)
-    stone = [card for card in pool if card.age == Age.STONE]
-    iron = [card for card in pool if card.age == Age.IRON]
-    crystal = [card for card in pool if card.age == Age.CRYSTAL]
-    return (stone, iron, crystal)
+    return age_breakdown(pool)
 
 
 def finish_deck(basePool, deckMap):
@@ -195,8 +210,75 @@ def max_hard_synergy(basePool):
     return finish_deck(pool, deckMap)
 
 
-
 # TODO: I want to change these functions to be partial strategies so that multiple can be combined in one deck.
 # from email to Jesse:  the "balance" strategies like some stone lots of iron or half stone half iron may need
 # to affect other strategies.  Like half stone and half iron but you want strong first within that balance but
 # maybe you want all strong no matter what and then after that you want to be even between stone and iron.
+
+
+def _add_cards(pool, deckMap, ageCounts):
+    for card in pool:
+        if card.cardId not in deckMap:
+            ageCounts[card.age] = ageCounts.get(card.ageL, 0) + 1
+            deckMap.update({card.cardId: card})
+    return (deckMap, ageCounts)
+
+
+def _add_cards_with_breakdown(pool, deckMap, breakdown, ageCounts):
+    (stone, iron, crystal) = age_breakdown(pool)
+    for i in range(DECK_SIZE):
+        needsStone = Breakdown.STONE in breakdown
+        stoneIdx = i - ageCounts.get(Age.STONE, 0)
+        if len(stone) > stoneIdx and stoneIdx >= 0 and needsStone:
+            if stone[stoneIdx].cardId not in deckMap:
+                deckMap.update({stone[stoneIdx].cardId: stone[stoneIdx]})
+                ageCounts[Age.STONE] = ageCounts.get(Age.STONE, 0) + 1
+        needsIron = Breakdown.IRON in breakdown
+        ironIdx = i - ageCounts.get(Age.IRON, 0)
+        if len(iron) > ironIdx and ironIdx >= 0 and needsIron:
+            if iron[ironIdx].cardId not in deckMap:
+                deckMap.update({iron[ironIdx].cardId: iron[ironIdx]})
+                ageCounts[Age.IRON] = ageCounts.get(Age.IRON, 0) + 1
+        needsCrystal = Breakdown.CRYSTAL in breakdown
+        crystalIdx = i - ageCounts.get(Age.CRYSTAL, 0)
+        if len(crystal) > crystalIdx and crystalIdx >= 0 and needsCrystal:
+            if crystal[crystalIdx].cardId not in deckMap:
+                deckMap.update({crystal[crystalIdx].cardId: crystal[crystalIdx]})
+                ageCounts[Age.CRYSTAL] = ageCounts.get(Age.CRYSTAL, 0) + 1
+        if len(deckMap) >= DECK_SIZE:
+            return (deckMap, ageCounts)
+    return (deckMap, ageCounts)
+
+
+def breakdown_strat(newBreakdown):
+    def strat(pool, deckMap, oldBreakdown, ageCounts):
+        return (deckMap, newBreakdown, ageCounts)
+    return strat
+
+
+def _apply_filter_strat(pool, deckMap, filter, breakdown, ageCounts, breakout=False, count=None):
+    # TODO: breakout means you have to fill in the count even if it no longer matches the breakdown
+    matching = [card for card in pool if filter(card)]
+
+    if breakdown is None:
+        return _add_cards(matching, deckMap, ageCounts)
+    return _add_cards_with_breakdown(matching, deckMap, breakdown, ageCounts)
+
+
+def _finish_breakdown(pool, deckMap, breakdown, ageCounts):
+    (deckMap, ageCount) = _add_cards_with_breakdown(pool, deckMap, breakdown, ageCounts)
+    return deckMap
+
+
+def build_deck(basePool, strategies):
+    pool = basePool[:]
+    deckMap = {}
+    breakdown = None
+    ageCounts = {}
+    for strategy in strategies:
+        (deckMap, breakdown, ageCounts) = strategy(pool, deckMap, breakdown, ageCounts)
+        if len(deckMap) >= DECK_SIZE:
+            break
+    if breakdown is not None:
+        deckMap = _finish_breakdown(pool, deckMap, breakdown, ageCounts)
+    return finish_deck(pool, deckMap)

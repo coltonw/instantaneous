@@ -116,13 +116,16 @@ def simulate(pool, wins, gamesPlayed, yourDeck=None):
     if yourDeck and len(yourDeck) == DECK_SIZE:
         decks['YOU'] = yourDeck.values()
         display_cards(decks['YOU'])
-    decks['even'] = ai.even(pool)
-    decks['stoneOnly'] = ai.stone(pool)
-    decks['ironOnly'] = ai.iron(pool)
-    decks['crystalOnly'] = ai.crystal(pool)
-    decks['stoneIron'] = ai.stone_iron(pool)
-    decks['stoneCrystal'] = ai.stone_crystal(pool)
-    decks['ironCrystal'] = ai.iron_crystal(pool)
+    decks['even'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.EVEN)])
+    decks['stoneOnly'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.STONE)])
+    decks['ironOnly'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.IRON)])
+    decks['crystalOnly'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.CRYSTAL)])
+    decks['OLD crystalOnly'] = ai.crystal(pool)
+    print('new', deck_summary(decks['crystalOnly']))
+    print('old', deck_summary(decks['OLD crystalOnly']))
+    decks['stoneIron'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.STONE_IRON)])
+    decks['stoneCrystal'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.STONE_CRYSTAL)])
+    decks['ironCrystal'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.IRON_CRYSTAL)])
     # decks['stoneMostly'] = stoneAgePool + stoneAgePool[-3:0] + ironAgePool[0:2]
     # decks['stoneThresholdIronMostly'] = stoneAgePool[0:4] + ironAgePool + ironAgePool[-1:0]
     decks['stoneThresholdEven'] = ai.low_stone(pool)

@@ -120,9 +120,6 @@ def simulate(pool, wins, gamesPlayed, yourDeck=None):
     decks['stoneOnly'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.STONE)])
     decks['ironOnly'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.IRON)])
     decks['crystalOnly'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.CRYSTAL)])
-    decks['OLD crystalOnly'] = ai.crystal(pool)
-    print('new', deck_summary(decks['crystalOnly']))
-    print('old', deck_summary(decks['OLD crystalOnly']))
     decks['stoneIron'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.STONE_IRON)])
     decks['stoneCrystal'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.STONE_CRYSTAL)])
     decks['ironCrystal'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.IRON_CRYSTAL)])
@@ -140,11 +137,12 @@ def simulate(pool, wins, gamesPlayed, yourDeck=None):
         decks[f'rand{i}'] = ai.strong(pool)
 
     for name1, deck1 in decks.items():
+        wins[name1] = wins.get(name1, 0)
         # print('{0}{1}'.format(name1, deck_summary(deck1)))
         for name2, deck2 in decks.items():
             m = match(deck1, deck2)
             if m > 0:
-                wins[name1] = wins.get(name1, 0) + 1
+                wins[name1] = wins[name1] + 1
             if name1 == 'YOU':
                 print(f'{name1} vs {name2}: {m}')
         # wins.append((name1, wins / (len(decks) - 1) * 100))

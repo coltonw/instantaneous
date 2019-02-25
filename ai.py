@@ -226,21 +226,22 @@ def _add_cards(pool, deckMap, ageCounts):
 
 def _add_cards_with_breakdown(pool, deckMap, breakdown, ageCounts):
     (stone, iron, crystal) = age_breakdown(pool)
+    startingAgeCounts = ageCounts.copy()
     for i in range(DECK_SIZE):
         needsStone = Breakdown.STONE in breakdown
-        stoneIdx = i - ageCounts.get(Age.STONE, 0)
+        stoneIdx = i - startingAgeCounts.get(Age.STONE, 0)
         if len(stone) > stoneIdx and stoneIdx >= 0 and needsStone:
             if stone[stoneIdx].cardId not in deckMap:
                 deckMap.update({stone[stoneIdx].cardId: stone[stoneIdx]})
                 ageCounts[Age.STONE] = ageCounts.get(Age.STONE, 0) + 1
         needsIron = Breakdown.IRON in breakdown
-        ironIdx = i - ageCounts.get(Age.IRON, 0)
+        ironIdx = i - startingAgeCounts.get(Age.IRON, 0)
         if len(iron) > ironIdx and ironIdx >= 0 and needsIron:
             if iron[ironIdx].cardId not in deckMap:
                 deckMap.update({iron[ironIdx].cardId: iron[ironIdx]})
                 ageCounts[Age.IRON] = ageCounts.get(Age.IRON, 0) + 1
         needsCrystal = Breakdown.CRYSTAL in breakdown
-        crystalIdx = i - ageCounts.get(Age.CRYSTAL, 0)
+        crystalIdx = i - startingAgeCounts.get(Age.CRYSTAL, 0)
         if len(crystal) > crystalIdx and crystalIdx >= 0 and needsCrystal:
             if crystal[crystalIdx].cardId not in deckMap:
                 deckMap.update({crystal[crystalIdx].cardId: crystal[crystalIdx]})

@@ -84,7 +84,7 @@ def display_cards(cards):
             print(cardStr)
 
 
-# TODO: fis this?
+# TODO: fix this?
 def play():
     pool = generate_pool()
     deckMap = {}
@@ -132,11 +132,37 @@ def simulate(pool, wins, gamesPlayed, yourDeck=None):
         decks[f'{race.name.lower()}HardSynergy'] = ai.hard_synergy(pool, race)
     for prof in Profession:
         decks[f'{prof.name.lower()}HardSynergy'] = ai.hard_synergy(pool, prof)
-    for i in range(21 - len(decks)):
-        decks[f'rand{i}'] = ai.strong(pool)
 
-    decks['randStrategy'] = ai.random_strategy(pool)
     decks['strongStoneIron'] = ai.build_deck(pool, [ai.strong_strat(), ai.breakdown_strat(ai.Breakdown.STONE_IRON)])
+    decks['14StoneIron'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.STONE),
+        ai.fill_strat(14),
+        ai.breakdown_strat(ai.Breakdown.IRON)
+    ])
+    decks['15StoneIron'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.STONE),
+        ai.fill_strat(15),
+        ai.breakdown_strat(ai.Breakdown.IRON)
+    ])
+    decks['16StoneIron'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.STONE),
+        ai.fill_strat(16),
+        ai.breakdown_strat(ai.Breakdown.IRON)
+    ])
+    decks['17StoneIron'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.STONE),
+        ai.fill_strat(17),
+        ai.breakdown_strat(ai.Breakdown.IRON)
+    ])
+    decks['18StoneIron'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.STONE),
+        ai.fill_strat(18),
+        ai.breakdown_strat(ai.Breakdown.IRON)
+    ])
+
+    for i in range(3):
+        decks[f'rand{i}'] = ai.random_good_strategy(pool)
+
     for name1, deck1 in decks.items():
         wins[name1] = wins.get(name1, 0)
         # print('{0}{1}'.format(name1, deck_summary(deck1)))

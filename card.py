@@ -99,14 +99,16 @@ def synergy_count(deck, synergy):
 
 def generate_easy_synergy(card, matching):
     choices = set([])
+    threshold = 0
     if matching:
         card.mod = Mod.EASY_MATCHING_SYNERGY
         choices = set([card.race, card.prof])
+        threshold = 1
     else:
         card.mod = Mod.EASY_NONMATCHING_SYNERGY
         choices = set(Race) | set(USEFUL_PROFS) - set([card.race, card.prof])
     synergy = choice(list(choices))
-    threshold = EASY_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else EASY_PROF_SYNERGY_THRESHOLD
+    threshold += EASY_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else EASY_PROF_SYNERGY_THRESHOLD
 
     def calc_synergy_strength(self, ageIdx, deck, oppDeck):
         if self.strength[ageIdx] == 0:
@@ -121,14 +123,16 @@ def generate_easy_synergy(card, matching):
 
 def generate_hard_synergy(card, matching):
     choices = set([])
+    threshold = 0
     if matching:
         card.mod = Mod.HARD_MATCHING_SYNERGY
         choices = set([card.race, card.prof])
+        threshold = 1
     else:
         card.mod = Mod.HARD_NONMATCHING_SYNERGY
         choices = set(Race) | set(USEFUL_PROFS) - set([card.race, card.prof])
     synergy = choice(list(choices))
-    threshold = HARD_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else HARD_PROF_SYNERGY_THRESHOLD
+    threshold += HARD_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else HARD_PROF_SYNERGY_THRESHOLD
 
     def calc_synergy_strength(self, ageIdx, deck, oppDeck):
         if self.strength[ageIdx] == 0:

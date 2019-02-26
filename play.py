@@ -66,7 +66,7 @@ def display_cards(cards):
     cardDispArr = []
     cardRows = [init_card_row()]
     for i, card in enumerate(cards):
-        add_detail_to_card(cardDispArr, i)
+        add_detail_to_card(cardDispArr, card.cardId)
         add_detail_to_card(cardDispArr, '/'.join(map(str, card.strength)))
         add_detail_to_card(cardDispArr, card.age)
         add_detail_to_card(cardDispArr, card.prof)
@@ -133,7 +133,6 @@ def simulate(pool, wins, gamesPlayed, yourDeck=None):
     for prof in Profession:
         decks[f'{prof.name.lower()}HardSynergy'] = ai.hard_synergy(pool, prof)
     for i in range(21 - len(decks)):
-        # multi sample makes it more possible that we repeat cards more which causes more variety in deck breakdown.
         decks[f'rand{i}'] = ai.strong(pool)
 
     for name1, deck1 in decks.items():
@@ -160,6 +159,8 @@ except (IndexError, ValueError):
     print('simualting 10 times')
 for i in range(sims):
     pool = generate_pool()
+    if sims == 1:
+        display_cards(pool)
     (wins, gamesPlayed) = simulate(pool, wins, gamesPlayed)
 
 

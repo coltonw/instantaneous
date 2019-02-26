@@ -221,10 +221,12 @@ def modify_card(card, mod):
         # stronger card
         card.mod = Mod.STRONG
         card.strength = list(map(lambda str: str + card.age.value if str > 0 else 0, card.strength))
+        card.desc = 'strong'
     if mod == Mod.WEAK:
         # stronger card
         card.mod = Mod.WEAK
         card.strength = _weaken(card.strength)
+        card.desc = 'weak'
     elif mod == Mod.EASY_MATCHING_SYNERGY:
         # easy matching synergy
         generate_easy_synergy(card, True)
@@ -240,6 +242,8 @@ def modify_card(card, mod):
     elif mod == Mod.COUNTER:
         # counter
         generate_counter(card)
+    else:
+        card.mod = mod
 
 
 def generate_pool():

@@ -1,7 +1,7 @@
 import collections
 from enum import Flag, auto
 from random import sample, shuffle
-from card import Age, Mod, Profession, HARD_PROF_SYNERGY_THRESHOLD, HARD_RACE_SYNERGY_THRESHOLD
+from card import Age, Mod, Profession, EASY_PROF_SYNERGY_THRESHOLD, EASY_RACE_SYNERGY_THRESHOLD, HARD_PROF_SYNERGY_THRESHOLD, HARD_RACE_SYNERGY_THRESHOLD
 from match import DECK_SIZE
 
 
@@ -75,81 +75,6 @@ def strong(basePool):
     return deck
 
 
-def even(basePool):
-    (stone, iron, crystal) = get_age_pools(basePool)
-    deck = []
-    for i in range(DECK_SIZE):
-        if len(stone) > i:
-            deck = deck + [stone[i]]
-        if len(iron) > i:
-            deck = deck + [iron[i]]
-        if len(crystal) > i:
-            deck = deck + [crystal[i]]
-        if len(deck) >= DECK_SIZE:
-            return deck[0:20] # rather than do this over and over, we should have a fill deck function that caps off the deck and then fills it with other strong stuff.
-    return deck
-
-
-def stone_iron(basePool):
-    (stone, iron, crystal) = get_age_pools(basePool)
-    deck = []
-    for i in range(DECK_SIZE):
-        if len(stone) > i:
-            deck = deck + [stone[i]]
-        if len(iron) > i:
-            deck = deck + [iron[i]]
-        if len(deck) >= DECK_SIZE:
-            return deck[0:20]
-    return deck
-
-
-def iron_crystal(basePool):
-    (stone, iron, crystal) = get_age_pools(basePool)
-    deck = []
-    for i in range(DECK_SIZE):
-        if len(iron) > i:
-            deck = deck + [iron[i]]
-        if len(crystal) > i:
-            deck = deck + [crystal[i]]
-        if len(deck) >= DECK_SIZE:
-            return deck[0:20]
-    return deck
-
-
-def stone_crystal(basePool):
-    (stone, iron, crystal) = get_age_pools(basePool)
-    deck = []
-    for i in range(DECK_SIZE):
-        if len(stone) > i:
-            deck = deck + [stone[i]]
-        if len(crystal) > i:
-            deck = deck + [crystal[i]]
-        if len(deck) >= DECK_SIZE:
-            return deck[0:20]
-    return deck
-
-
-def stone(basePool):
-    (stone, iron, crystal) = get_age_pools(basePool)
-    if len(stone) >= DECK_SIZE:
-        return stone[0:20]
-    return finish_deck(basePool, stone)
-
-
-def iron(basePool):
-    (stone, iron, crystal) = get_age_pools(basePool)
-    if len(iron) >= DECK_SIZE:
-        return iron[0:20]
-    return finish_deck(basePool, iron)
-
-
-def crystal(basePool):
-    (stone, iron, crystal) = get_age_pools(basePool)
-    if len(crystal) >= DECK_SIZE:
-        return crystal[0:20]
-    return finish_deck(basePool, crystal)
-
-
 def low_stone(basePool):
     (stone, iron, crystal) = get_age_pools(basePool)
     deck = []
@@ -193,17 +118,20 @@ def hard_synergy(basePool, synergy):
 
 def max_hard_synergy(basePool):
     pool = basePool[:]
+    # dict keyed by synergy of dicts of cards keyed by cardId
     hardSynergies = {}
     for card in pool:
-        if card.mod == Mod.HARD_NONMATCHING_SYNERGY or card.mod == Mod.HARD_NONMATCHING_SYNERGY:
-            hardSynergies.setdefault(card.synergy, {}).update({card.cardId: card})
+        if card.mod == Mod.HARD_MATCHING_SYNERGY or card.mod == Mod.HARD_NONMATCHING_SYNERGY:
+            hardSynergy = hardSynergies.get(card.synergy, {})
+            hardSynergy[card.cardId] = card
+            hardSynergies[card.synergy] = hardSynergy
     maxSynergy = None
     maxSynergyCardDict = {}
     for synergy, cardDict in hardSynergies.items():
         if len(cardDict) > len(maxSynergyCardDict):
             maxSynergy = synergy
             maxSynergyCardDict = cardDict
-    # print(maxSynergy.name, len(maxSynergyCardDict))
+    # print(maxSynergy.name, len(maxSynergyCardDict), maxSynergyCardDict)
     deckMap = maxSynergyCardDict
     cardsNeeded = HARD_PROF_SYNERGY_THRESHOLD if isinstance(maxSynergy, Profession) else HARD_RACE_SYNERGY_THRESHOLD
     deckMap = fill_by_synergy(pool, maxSynergyCardDict, maxSynergy, cardsNeeded)
@@ -214,13 +142,19 @@ def max_hard_synergy(basePool):
 # from email to Jesse:  the "balance" strategies like some stone lots of iron or half stone half iron may need
 # to affect other strategies.  Like half stone and half iron but you want strong first within that balance but
 # maybe you want all strong no matter what and then after that you want to be even between stone and iron.
+# TODO: convert all the above into the below
+
+
+def _add_card(card, deckMap, ageCounts):
+    if card.cardId not in deckMap:
+        ageCounts[card.age] = ageCounts.get(card.age, 0) + 1
+        deckMap.update({card.cardId: card})
+    return (deckMap, ageCounts)
 
 
 def _add_cards(pool, deckMap, ageCounts):
     for card in pool:
-        if card.cardId not in deckMap:
-            ageCounts[card.age] = ageCounts.get(card.ageL, 0) + 1
-            deckMap.update({card.cardId: card})
+        (deckMap, ageCounts) = _add_card(card, deckMap, ageCounts)
     return (deckMap, ageCounts)
 
 
@@ -228,27 +162,58 @@ def _add_cards_with_breakdown(pool, deckMap, breakdown, ageCounts):
     (stone, iron, crystal) = age_breakdown(pool)
     startingAgeCounts = ageCounts.copy()
     for i in range(DECK_SIZE):
+        if len(deckMap) >= DECK_SIZE:
+            return (deckMap, ageCounts)
         needsStone = Breakdown.STONE in breakdown
         stoneIdx = i - startingAgeCounts.get(Age.STONE, 0)
         if len(stone) > stoneIdx and stoneIdx >= 0 and needsStone:
             if stone[stoneIdx].cardId not in deckMap:
                 deckMap.update({stone[stoneIdx].cardId: stone[stoneIdx]})
                 ageCounts[Age.STONE] = ageCounts.get(Age.STONE, 0) + 1
+        if len(deckMap) >= DECK_SIZE:
+            return (deckMap, ageCounts)
         needsIron = Breakdown.IRON in breakdown
         ironIdx = i - startingAgeCounts.get(Age.IRON, 0)
         if len(iron) > ironIdx and ironIdx >= 0 and needsIron:
             if iron[ironIdx].cardId not in deckMap:
                 deckMap.update({iron[ironIdx].cardId: iron[ironIdx]})
                 ageCounts[Age.IRON] = ageCounts.get(Age.IRON, 0) + 1
+        if len(deckMap) >= DECK_SIZE:
+            return (deckMap, ageCounts)
         needsCrystal = Breakdown.CRYSTAL in breakdown
         crystalIdx = i - startingAgeCounts.get(Age.CRYSTAL, 0)
         if len(crystal) > crystalIdx and crystalIdx >= 0 and needsCrystal:
             if crystal[crystalIdx].cardId not in deckMap:
                 deckMap.update({crystal[crystalIdx].cardId: crystal[crystalIdx]})
                 ageCounts[Age.CRYSTAL] = ageCounts.get(Age.CRYSTAL, 0) + 1
-        if len(deckMap) >= DECK_SIZE:
-            return (deckMap, ageCounts)
     return (deckMap, ageCounts)
+
+
+def _fill_to_count(pool, deckMap, ageCounts, count):
+    total_needed = len(deckMap) + count
+    for card in pool:
+        if len(deckMap) >= total_needed:
+            break
+        (deckMap, ageCounts) = _add_card(card, deckMap, ageCounts)
+    # TODO: throw error if you don't reach count. Requires error handling first
+    return (deckMap, ageCounts)
+
+
+def _apply_filter_strat(pool, deckMap, test, breakdown, ageCounts, breakout=False, count=None):
+    # TODO: breakout means you have to fill in the count even if it no longer matches the breakdown
+    # if breakout is true and count is None, it means just add all matching cards
+    # we need to add a "max" to the two add cards functions to support count and breakout
+    matching = [card for card in pool if test(card)]
+    # startingDeckSize = len(deckMap)
+    if breakdown is None:
+        (deckMap, ageCounts) = _add_cards(matching, deckMap, ageCounts)
+    (deckMap, ageCounts) = _add_cards_with_breakdown(matching, deckMap, breakdown, ageCounts)
+    return (deckMap, ageCounts)
+
+
+##############
+# STRATEGIES #
+##############
 
 
 def breakdown_strat(newBreakdown):
@@ -257,13 +222,29 @@ def breakdown_strat(newBreakdown):
     return strat
 
 
-def _apply_filter_strat(pool, deckMap, filter, breakdown, ageCounts, breakout=False, count=None):
-    # TODO: breakout means you have to fill in the count even if it no longer matches the breakdown
-    matching = [card for card in pool if filter(card)]
+def strong_strat(breakout=False):
+    def strat(pool, deckMap, breakdown, ageCounts):
+        return _apply_filter_strat(pool, deckMap, lambda c: c.mod == Mod.STRONG, breakdown, ageCounts, breakout=breakout)
+    return strat
 
-    if breakdown is None:
-        return _add_cards(matching, deckMap, ageCounts)
-    return _add_cards_with_breakdown(matching, deckMap, breakdown, ageCounts)
+
+def easy_synergy_strat(breakout=False):
+    # this strat only makes sense as a follow-up strategy after others
+    def strat(pool, deckMap, breakdown, ageCounts):
+        synergies = {}
+        for c in deckMap:
+            synergies[c.race] = synergies.get(c.race, 0) + 1
+            synergies[c.prof] = synergies.get(c.prof, 0) + 1
+        for card in pool:
+            if card.mod == Mod.EASY_MATCHING_SYNERGY or card.mod == Mod.EASY_NONMATCHING_SYNERGY:
+                minCount = EASY_PROF_SYNERGY_THRESHOLD if isinstance(card.synergy, Profession) else EASY_RACE_SYNERGY_THRESHOLD
+                if synergies.get(card.synergy, 0) >= minCount:
+                    (deckMap, ageCounts) = _add_card(card, deckMap, ageCounts)
+        return (deckMap, ageCounts)
+    return strat
+
+
+# END STRATEGIES
 
 
 def _finish_breakdown(pool, deckMap, breakdown, ageCounts):

@@ -135,6 +135,8 @@ def simulate(pool, wins, gamesPlayed, yourDeck=None):
     for i in range(21 - len(decks)):
         decks[f'rand{i}'] = ai.strong(pool)
 
+    decks['randStrategy'] = ai.random_strategy(pool)
+    decks['strongStoneIron'] = ai.build_deck(pool, [ai.strong_strat(), ai.breakdown_strat(ai.Breakdown.STONE_IRON)])
     for name1, deck1 in decks.items():
         wins[name1] = wins.get(name1, 0)
         # print('{0}{1}'.format(name1, deck_summary(deck1)))

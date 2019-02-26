@@ -1,6 +1,6 @@
 import collections
 from enum import Flag, auto
-from random import sample, shuffle
+from random import choices, sample, shuffle
 from card import Age, Mod, Profession, EASY_PROF_SYNERGY_THRESHOLD, EASY_RACE_SYNERGY_THRESHOLD, HARD_PROF_SYNERGY_THRESHOLD, HARD_RACE_SYNERGY_THRESHOLD
 from match import DECK_SIZE
 
@@ -154,6 +154,8 @@ def _add_card(card, deckMap, ageCounts):
 
 def _add_cards(pool, deckMap, ageCounts):
     for card in pool:
+        if len(deckMap) >= DECK_SIZE:
+            break
         (deckMap, ageCounts) = _add_card(card, deckMap, ageCounts)
     return (deckMap, ageCounts)
 
@@ -207,8 +209,9 @@ def _apply_filter_strat(pool, deckMap, test, breakdown, ageCounts, breakout=Fals
     # startingDeckSize = len(deckMap)
     if breakdown is None:
         (deckMap, ageCounts) = _add_cards(matching, deckMap, ageCounts)
-    (deckMap, ageCounts) = _add_cards_with_breakdown(matching, deckMap, breakdown, ageCounts)
-    return (deckMap, ageCounts)
+    else:
+        (deckMap, ageCounts) = _add_cards_with_breakdown(matching, deckMap, breakdown, ageCounts)
+    return (deckMap, breakdown, ageCounts)
 
 
 ##############
@@ -240,7 +243,7 @@ def easy_synergy_strat(breakout=False):
                 minCount = EASY_PROF_SYNERGY_THRESHOLD if isinstance(card.synergy, Profession) else EASY_RACE_SYNERGY_THRESHOLD
                 if synergies.get(card.synergy, 0) >= minCount:
                     (deckMap, ageCounts) = _add_card(card, deckMap, ageCounts)
-        return (deckMap, ageCounts)
+        return (deckMap, breakdown, ageCounts)
     return strat
 
 
@@ -264,3 +267,14 @@ def build_deck(basePool, strategies):
     if breakdown is not None:
         deckMap = _finish_breakdown(pool, deckMap, breakdown, ageCounts)
     return finish_deck(pool, deckMap)
+
+
+def random_strategy(basePool):
+    strats = []
+    breakdown = choices([Breakdown.STONE, Breakdown.STONE_IRON, Breakdown.EVEN, None], weights= [1, 2, 3, 6])[0]
+
+    if breakdown is not None:
+        strats.append(breakdown_strat(breakdown))
+    strats.append(strong_strat())
+    shuffle(strats)
+    return build_deck(basePool, strats)

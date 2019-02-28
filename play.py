@@ -136,10 +136,15 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False):
     # decks['strong'] = stoneAgePool[0:5] + ironAgePool[0:5] + crystalAgePool[0:10]
     decks['maxHard'] = ai.build_deck(pool, [ai.max_hard_synergy_strat()])
     decks['maxHardStone'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.STONE), ai.max_hard_synergy_strat()])
+    decks['maxHardStoneIron'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.STONE_IRON),
+        ai.max_hard_synergy_strat(),
+        ai.breakdown_strat(ai.Breakdown.STONE)
+    ])
     for race in Race:
-        decks[f'{race.name.lower()}HardSynergy'] = ai.hard_synergy(pool, race)
+        decks[f'{race.name.lower()}HardSynergy'] = ai.build_deck(pool, [ai.hard_synergy_strat(race)])
     for prof in Profession:
-        decks[f'{prof.name.lower()}HardSynergy'] = ai.hard_synergy(pool, prof)
+        decks[f'{prof.name.lower()}HardSynergy'] = ai.build_deck(pool, [ai.hard_synergy_strat(prof)])
 
     decks['strongStoneIron'] = ai.build_deck(pool, [ai.strong_strat(), ai.breakdown_strat(ai.Breakdown.STONE_IRON)])
     decks['15StoneIron'] = ai.build_deck(pool, [

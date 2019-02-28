@@ -64,49 +64,6 @@ def finish_deck(basePool, deckMap):
     return list(deckMap.values())[0:20]
 
 
-def strong(basePool):
-    pool = basePool[:]
-    strong = [card for card in pool if card.mod == Mod.STRONG]
-    deck = deck_sample([], strong)
-    if len(deck) < DECK_SIZE:
-        weak = [card for card in pool if card.mod != Mod.STRONG]
-        deck = deck_sample(deck, weak)
-    return deck
-
-
-def fill_by_synergy(pool, deckMap, synergy, cardsNeeded):
-    for card in deckMap.values():
-        if card.race == synergy or card.prof == synergy:
-            cardsNeeded = cardsNeeded - 1
-    sortedPool = sort_by_strength(pool)
-    for card in sortedPool:
-        if cardsNeeded <= 0:
-            break
-        if card.race == synergy or card.prof == synergy:
-            deckMap[card.cardId] = card
-            cardsNeeded = cardsNeeded - 1
-    return deckMap
-
-
-def hard_synergy(basePool, synergy):
-    pool = basePool[:]
-    deckMap = {}
-    for card in pool:
-        if (card.mod == Mod.HARD_MATCHING_SYNERGY or card.mod == Mod.HARD_NONMATCHING_SYNERGY) and card.synergy == synergy:
-            deckMap[card.cardId] = card
-    # print(synergy.name, len(deckMap))
-    cardsNeeded = HARD_PROF_SYNERGY_THRESHOLD if isinstance(synergy, Profession) else HARD_RACE_SYNERGY_THRESHOLD
-    deckMap = fill_by_synergy(pool, deckMap, synergy, cardsNeeded)
-    return finish_deck(pool, deckMap)
-
-
-# I want to change these functions to be partial strategies so that multiple can be combined in one deck.
-# from email to Jesse:  the "balance" strategies like some stone lots of iron or half stone half iron may need
-# to affect other strategies.  Like half stone and half iron but you want strong first within that balance but
-# maybe you want all strong no matter what and then after that you want to be even between stone and iron.
-# TODO: convert all the above into the below
-
-
 def _add_card(card, deckMap, ageCounts):
     if card.cardId not in deckMap:
         ageCounts[card.age] = ageCounts.get(card.age, 0) + 1
@@ -213,6 +170,24 @@ def easy_synergy_strat(breakout=False):
     return strat
 
 
+def hard_synergy_strat(synergy):
+    def strat(pool, deckMap, breakdown, ageCounts):
+        matching = {}
+        for card in pool:
+            if (card.mod == Mod.HARD_MATCHING_SYNERGY or card.mod == Mod.HARD_NONMATCHING_SYNERGY) and (card.race == synergy or card.prof == synergy):
+                matching[card.cardId] = card
+        if len(matching) > 0:
+            deckMap.update(matching)
+            def synergyTest(c):
+                return c.race == synergy or c.prof == synergy
+            cardsMatching = sum([1 for c in deckMap.values() if synergyTest(c)])
+            cardsNeeded = HARD_PROF_SYNERGY_THRESHOLD if isinstance(synergy, Profession) else HARD_RACE_SYNERGY_THRESHOLD
+            return _apply_filter_strat(pool, deckMap, synergyTest, breakdown, ageCounts,
+                                       breakout=True, count=cardsNeeded - cardsMatching)
+        return (deckMap, breakdown, ageCounts)
+    return strat
+
+
 def max_hard_synergy_strat():
     def strat(pool, deckMap, breakdown, ageCounts):
         # dict keyed by synergy of dicts of cards keyed by cardId
@@ -240,12 +215,25 @@ def max_hard_synergy_strat():
     return strat
 
 
+# gives specific number of cards no matter what
 def fill_strat(count):
     def strat(pool, deckMap, breakdown, ageCounts):
         if breakdown is None:
             (deckMap, ageCounts) = _add_cards(pool, deckMap, ageCounts, count)
         else:
             (deckMap, ageCounts) = _add_cards_with_breakdown(pool, deckMap, breakdown, ageCounts, count)
+        return (deckMap, breakdown, ageCounts)
+    return strat
+
+
+# fills deck till it has count number of cards
+def fill_to_strat(count):
+    def strat(pool, deckMap, breakdown, ageCounts):
+        numToAdd = max(count - len(deckMap), 0)
+        if breakdown is None:
+            (deckMap, ageCounts) = _add_cards(pool, deckMap, ageCounts, numToAdd)
+        else:
+            (deckMap, ageCounts) = _add_cards_with_breakdown(pool, deckMap, breakdown, ageCounts, numToAdd)
         return (deckMap, breakdown, ageCounts)
     return strat
 
@@ -274,7 +262,7 @@ def build_deck(basePool, strategies):
 
 def random_good_strategy(basePool):
     strats = []
-    breakdown = choices([Breakdown.STONE, Breakdown.STONE_IRON, Breakdown.EVEN, None], weights= [1, 2, 3, 6])[0]
+    breakdown = choices([Breakdown.STONE, Breakdown.STONE_IRON, Breakdown.EVEN, None], weights=[1, 2, 3, 6])[0]
 
     if breakdown is not None:
         strats.append(breakdown_strat(breakdown))

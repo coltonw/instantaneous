@@ -191,24 +191,3 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False):
         # wins.append((name1, wins / (len(decks) - 1) * 100))
     gamesPlayed += len(decks) - 1
     return (wins, gamesPlayed)
-
-
-wins = {}
-gamesPlayed = 0
-sims = 10
-try:
-    sims = int(sys.argv[1])
-    print(f'simulating {sims} times')
-except (IndexError, ValueError):
-    print('simulating 10 times')
-for i in range(sims):
-    (wins, gamesPlayed) = simulate(wins, gamesPlayed, verbose=sims == 1)
-
-
-winPct = []
-for deckName, wins in wins.items():
-    winPct.append((deckName, wins / gamesPlayed * 100))
-winPct = sorted(winPct, key=lambda t: t[1], reverse=True)
-print()
-for name, pct in winPct:
-    print('{0} win%: {1:.0f}'.format(name, pct))

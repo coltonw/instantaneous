@@ -42,11 +42,11 @@ BASE_STRENGTH = {
     Age.IRON: [0, 5, 5],
     Age.CRYSTAL: [0, 0, 8]
 }
-EASY_PROF_SYNERGY_THRESHOLD = 5
-EASY_RACE_SYNERGY_THRESHOLD = 9
+EASY_PROF_SYNERGY_THRESHOLD = 6
+EASY_RACE_SYNERGY_THRESHOLD = 10
 
-HARD_PROF_SYNERGY_THRESHOLD = 8
-HARD_RACE_SYNERGY_THRESHOLD = 15
+HARD_PROF_SYNERGY_THRESHOLD = 9
+HARD_RACE_SYNERGY_THRESHOLD = 16
 
 PROF_COUNTER_THRESHOLD = 6
 RACE_COUNTER_THRESHOLD = 10
@@ -78,6 +78,7 @@ class Card:
 
 
 def generate_basic_pool():
+    Card.cardId = 1
     pool = []
     for age in Age:
         for race in Race:
@@ -103,10 +104,10 @@ def generate_easy_synergy(card, matching):
     if matching:
         card.mod = Mod.EASY_MATCHING_SYNERGY
         choices = set([card.race, card.prof])
-        threshold = 1
     else:
         card.mod = Mod.EASY_NONMATCHING_SYNERGY
         choices = set(Race) | set(USEFUL_PROFS) - set([card.race, card.prof])
+        threshold = -1
     synergy = choice(list(choices))
     threshold += EASY_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else EASY_PROF_SYNERGY_THRESHOLD
 
@@ -127,10 +128,10 @@ def generate_hard_synergy(card, matching):
     if matching:
         card.mod = Mod.HARD_MATCHING_SYNERGY
         choices = set([card.race, card.prof])
-        threshold = 1
     else:
         card.mod = Mod.HARD_NONMATCHING_SYNERGY
         choices = set(Race) | set(USEFUL_PROFS) - set([card.race, card.prof])
+        threshold = -1
     synergy = choice(list(choices))
     threshold += HARD_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else HARD_PROF_SYNERGY_THRESHOLD
 

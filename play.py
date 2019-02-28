@@ -111,7 +111,10 @@ def play():
 # weakPool = list(filter(lambda card: card.race != Race.BEASTMAN, pool))
 
 
-def simulate(pool, wins, gamesPlayed, yourDeck=None):
+def simulate(wins, gamesPlayed, yourDeck=None, verbose=False):
+    pool = generate_pool()
+    if verbose:
+        display_cards(pool)
     decks = {}
     if yourDeck and len(yourDeck) == DECK_SIZE:
         decks['YOU'] = yourDeck.values()
@@ -125,33 +128,23 @@ def simulate(pool, wins, gamesPlayed, yourDeck=None):
     decks['ironCrystal'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.IRON_CRYSTAL)])
     # decks['stoneMostly'] = stoneAgePool + stoneAgePool[-3:0] + ironAgePool[0:2]
     # decks['stoneThresholdIronMostly'] = stoneAgePool[0:4] + ironAgePool + ironAgePool[-1:0]
-    decks['stoneThresholdEven'] = ai.low_stone(pool)
+    decks['4stoneEven'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.STONE),
+        ai.fill_strat(4),
+        ai.breakdown_strat(ai.Breakdown.IRON_CRYSTAL)
+    ])
     # decks['strong'] = stoneAgePool[0:5] + ironAgePool[0:5] + crystalAgePool[0:10]
-    decks['maxHardSynergy'] = ai.max_hard_synergy(pool)
+    decks['maxHard'] = ai.build_deck(pool, [ai.max_hard_synergy_strat()])
+    decks['maxHardStone'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.STONE), ai.max_hard_synergy_strat()])
     for race in Race:
         decks[f'{race.name.lower()}HardSynergy'] = ai.hard_synergy(pool, race)
     for prof in Profession:
         decks[f'{prof.name.lower()}HardSynergy'] = ai.hard_synergy(pool, prof)
 
     decks['strongStoneIron'] = ai.build_deck(pool, [ai.strong_strat(), ai.breakdown_strat(ai.Breakdown.STONE_IRON)])
-    decks['14StoneIron'] = ai.build_deck(pool, [
-        ai.breakdown_strat(ai.Breakdown.STONE),
-        ai.fill_strat(14),
-        ai.breakdown_strat(ai.Breakdown.IRON)
-    ])
     decks['15StoneIron'] = ai.build_deck(pool, [
         ai.breakdown_strat(ai.Breakdown.STONE),
         ai.fill_strat(15),
-        ai.breakdown_strat(ai.Breakdown.IRON)
-    ])
-    decks['16StoneIron'] = ai.build_deck(pool, [
-        ai.breakdown_strat(ai.Breakdown.STONE),
-        ai.fill_strat(16),
-        ai.breakdown_strat(ai.Breakdown.IRON)
-    ])
-    decks['17StoneIron'] = ai.build_deck(pool, [
-        ai.breakdown_strat(ai.Breakdown.STONE),
-        ai.fill_strat(17),
         ai.breakdown_strat(ai.Breakdown.IRON)
     ])
     decks['18StoneIron'] = ai.build_deck(pool, [
@@ -160,12 +153,35 @@ def simulate(pool, wins, gamesPlayed, yourDeck=None):
         ai.breakdown_strat(ai.Breakdown.IRON)
     ])
 
+    decks['12StoneEven'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.STONE),
+        ai.fill_strat(12),
+        ai.breakdown_strat(ai.Breakdown.IRON_CRYSTAL)
+    ])
+    decks['15StoneEven'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.STONE),
+        ai.fill_strat(15),
+        ai.breakdown_strat(ai.Breakdown.IRON_CRYSTAL)
+    ])
+    decks['18StoneEven'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.STONE),
+        ai.fill_strat(18),
+        ai.breakdown_strat(ai.Breakdown.IRON_CRYSTAL)
+    ])
+
+    decks['17StoneCrystal'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.STONE),
+        ai.fill_strat(18),
+        ai.breakdown_strat(ai.Breakdown.CRYSTAL)
+    ])
+
     for i in range(3):
         decks[f'rand{i}'] = ai.random_good_strategy(pool)
 
     for name1, deck1 in decks.items():
         wins[name1] = wins.get(name1, 0)
-        # print('{0}{1}'.format(name1, deck_summary(deck1)))
+        if verbose:
+            print('{0}{1}'.format(name1, deck_summary(deck1)))
         for name2, deck2 in decks.items():
             m = match(deck1, deck2)
             if m > 0:
@@ -184,17 +200,15 @@ try:
     sims = int(sys.argv[1])
     print(f'simulating {sims} times')
 except (IndexError, ValueError):
-    print('simualting 10 times')
+    print('simulating 10 times')
 for i in range(sims):
-    pool = generate_pool()
-    if sims == 1:
-        display_cards(pool)
-    (wins, gamesPlayed) = simulate(pool, wins, gamesPlayed)
+    (wins, gamesPlayed) = simulate(wins, gamesPlayed, verbose=sims == 1)
 
 
 winPct = []
 for deckName, wins in wins.items():
     winPct.append((deckName, wins / gamesPlayed * 100))
 winPct = sorted(winPct, key=lambda t: t[1], reverse=True)
+print()
 for name, pct in winPct:
     print('{0} win%: {1:.0f}'.format(name, pct))

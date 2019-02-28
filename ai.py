@@ -74,21 +74,6 @@ def strong(basePool):
     return deck
 
 
-def low_stone(basePool):
-    (stone, iron, crystal) = get_age_pools(basePool)
-    deck = []
-    for i in range(DECK_SIZE):
-        if len(stone) > i and i < 4:
-            deck = deck + [stone[i]]
-        if len(iron) > i:
-            deck = deck + [iron[i]]
-        if len(crystal) > i:
-            deck = deck + [crystal[i]]
-        if len(deck) >= DECK_SIZE:
-            return deck[0:20]
-    return deck
-
-
 def fill_by_synergy(pool, deckMap, synergy, cardsNeeded):
     for card in deckMap.values():
         if card.race == synergy or card.prof == synergy:
@@ -115,29 +100,7 @@ def hard_synergy(basePool, synergy):
     return finish_deck(pool, deckMap)
 
 
-def max_hard_synergy(basePool):
-    pool = basePool[:]
-    # dict keyed by synergy of dicts of cards keyed by cardId
-    hardSynergies = {}
-    for card in pool:
-        if card.mod == Mod.HARD_MATCHING_SYNERGY or card.mod == Mod.HARD_NONMATCHING_SYNERGY:
-            hardSynergy = hardSynergies.get(card.synergy, {})
-            hardSynergy[card.cardId] = card
-            hardSynergies[card.synergy] = hardSynergy
-    maxSynergy = None
-    maxSynergyCardDict = {}
-    for synergy, cardDict in hardSynergies.items():
-        if len(cardDict) > len(maxSynergyCardDict):
-            maxSynergy = synergy
-            maxSynergyCardDict = cardDict
-    # print(maxSynergy.name, len(maxSynergyCardDict), maxSynergyCardDict)
-    deckMap = maxSynergyCardDict
-    cardsNeeded = HARD_PROF_SYNERGY_THRESHOLD if isinstance(maxSynergy, Profession) else HARD_RACE_SYNERGY_THRESHOLD
-    deckMap = fill_by_synergy(pool, maxSynergyCardDict, maxSynergy, cardsNeeded)
-    return finish_deck(pool, deckMap)
-
-
-# TODO: I want to change these functions to be partial strategies so that multiple can be combined in one deck.
+# I want to change these functions to be partial strategies so that multiple can be combined in one deck.
 # from email to Jesse:  the "balance" strategies like some stone lots of iron or half stone half iron may need
 # to affect other strategies.  Like half stone and half iron but you want strong first within that balance but
 # maybe you want all strong no matter what and then after that you want to be even between stone and iron.
@@ -197,14 +160,18 @@ def _add_cards_with_breakdown(pool, deckMap, breakdown, ageCounts, count=None):
 
 
 def _apply_filter_strat(pool, deckMap, test, breakdown, ageCounts, breakout=False, count=None):
-    # TODO: breakout means you have to fill in the count even if it no longer matches the breakdown
+    # breakout means you have to fill in the count even if it no longer matches the breakdown
     # if breakout is true and count is None, it means just add all matching cards
     # if count is not None and breakout is False count is a max to add
     matching = [card for card in pool if test(card)]
+    startingSize = len(deckMap)
     if breakdown is None:
         (deckMap, ageCounts) = _add_cards(matching, deckMap, ageCounts, count)
     else:
         (deckMap, ageCounts) = _add_cards_with_breakdown(matching, deckMap, breakdown, ageCounts, count)
+    cardsAdded = len(deckMap) - startingSize
+    if breakout and (count is None or cardsAdded < count):
+        _add_cards(matching, deckMap, ageCounts, count - cardsAdded)
     return (deckMap, breakdown, ageCounts)
 
 
@@ -243,6 +210,33 @@ def easy_synergy_strat(breakout=False):
         else:
             (deckMap, ageCounts) = _add_cards_with_breakdown(matching, deckMap, breakdown, ageCounts)
         return (deckMap, breakdown, ageCounts)
+    return strat
+
+
+def max_hard_synergy_strat():
+    def strat(pool, deckMap, breakdown, ageCounts):
+        # dict keyed by synergy of dicts of cards keyed by cardId
+        hardSynergies = {}
+        for card in pool:
+            if card.mod == Mod.HARD_MATCHING_SYNERGY or card.mod == Mod.HARD_NONMATCHING_SYNERGY:
+                hardSynergy = hardSynergies.get(card.synergy, {})
+                hardSynergy[card.cardId] = card
+                hardSynergies[card.synergy] = hardSynergy
+        maxSynergy = None
+        maxSynergyCardDict = {}
+        for synergy, cardDict in hardSynergies.items():
+            if len(cardDict) > len(maxSynergyCardDict):
+                maxSynergy = synergy
+                maxSynergyCardDict = cardDict
+        # print(maxSynergy.name, len(maxSynergyCardDict), maxSynergyCardDict)
+        deckMap.update(maxSynergyCardDict)
+
+        def synergyTest(c):
+            return c.race == maxSynergy or c.prof == maxSynergy
+        cardsMatching = sum([1 for c in deckMap.values() if synergyTest(c)])
+        cardsNeeded = HARD_PROF_SYNERGY_THRESHOLD if isinstance(maxSynergy, Profession) else HARD_RACE_SYNERGY_THRESHOLD
+        return _apply_filter_strat(pool, deckMap, synergyTest, breakdown, ageCounts,
+                                   breakout=True, count=cardsNeeded - cardsMatching)
     return strat
 
 

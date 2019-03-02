@@ -1,7 +1,7 @@
 import collections
 from enum import Flag, auto
 from random import choices, randrange, sample, shuffle
-from card import Age, Mod, Profession, EASY_PROF_SYNERGY_THRESHOLD, EASY_RACE_SYNERGY_THRESHOLD, HARD_PROF_SYNERGY_THRESHOLD, HARD_RACE_SYNERGY_THRESHOLD
+from card import Age, Mod, Profession, Race, EASY_PROF_SYNERGY_THRESHOLD, EASY_RACE_SYNERGY_THRESHOLD, HARD_PROF_SYNERGY_THRESHOLD, HARD_RACE_SYNERGY_THRESHOLD
 from match import DECK_SIZE
 
 
@@ -21,7 +21,7 @@ def deck_sample(deck, samplePool, sampleSize=DECK_SIZE):
 
 
 # this is an arbitrary card strength value used for sorting
-def get_card_relative_strength(card):
+def _get_card_relative_strength(card):
     if card.mod == Mod.STRONG:
         return 3
     if card.mod == Mod.EASY_MATCHING_SYNERGY or card.mod == Mod.EASY_NONMATCHING_SYNERGY:
@@ -34,7 +34,7 @@ def get_card_relative_strength(card):
 
 
 def sort_by_strength(basePool):
-    return sorted(basePool, key=get_card_relative_strength, reverse=True)
+    return sorted(basePool, key=_get_card_relative_strength, reverse=True)
 
 
 def age_breakdown(cards):
@@ -235,6 +235,29 @@ def fill_to_strat(count):
         else:
             (deckMap, ageCounts) = _add_cards_with_breakdown(pool, deckMap, breakdown, ageCounts, numToAdd)
         return (deckMap, breakdown, ageCounts)
+    return strat
+
+
+def lopsided_fill_strat(count):
+    def strat(pool, deckMap, breakdown, ageCounts):
+        raceCounts = {}
+        profCounts = {}
+        for c in deckMap.values():
+            raceCounts[c.race] = raceCounts.get(c.race, 0) + 1
+            profCounts[c.prof] = profCounts.get(c.prof, 0) + 1
+
+        races = list(Race)
+        shuffle(races)
+        races = sorted(races, key=lambda r: raceCounts.get(r, 0))
+        races = set(races[0:2])
+        profs = list(Profession)
+        shuffle(profs)
+        profs = sorted(profs, key=lambda p: profCounts.get(p, 0))
+        profs = set(profs[0:3])
+
+        def matches(c):
+            return c.race in races and c.prof in profs
+        return _apply_filter_strat(pool, deckMap, matches, breakdown, ageCounts, count=count)
     return strat
 
 

@@ -40,7 +40,7 @@ USEFUL_PROFS = [prof for prof in list(Profession) if prof != Profession.PEASANT]
 BASE_STRENGTH = {
     Age.STONE: [3, 3, 3],
     Age.IRON: [0, 5, 5],
-    Age.CRYSTAL: [0, 0, 8]
+    Age.CRYSTAL: [0, 0, 9]
 }
 EASY_PROF_SYNERGY_THRESHOLD = 6
 EASY_RACE_SYNERGY_THRESHOLD = 10
@@ -123,6 +123,7 @@ def generate_easy_synergy(card, matching):
 
 
 def generate_hard_synergy(card, matching):
+    card.strength = _weaken(card.strength)
     choices = set([])
     threshold = 0
     if matching:

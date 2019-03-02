@@ -1,7 +1,8 @@
 import shutil
 import sys
+from functools import reduce
 from textwrap import wrap
-from card import generate_pool, Race, Profession
+from card import generate_pool, Mod, Race, Profession
 from match import DECK_SIZE, match, deck_summary
 import ai
 
@@ -84,6 +85,14 @@ def display_cards(cards):
             print(cardStr)
 
 
+def mod_count(mod, pool):
+    return reduce(lambda acc, card: acc + (card.mod == mod), pool, 0)
+
+
+def mod_breakdown(pool):
+    return f'(strong={mod_count(Mod.STRONG, pool)};easy={mod_count(Mod.EASY_MATCHING_SYNERGY, pool) + mod_count(Mod.EASY_NONMATCHING_SYNERGY, pool)})'
+
+
 # TODO: fix this?
 def play():
     pool = generate_pool()
@@ -115,6 +124,7 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False):
     pool = generate_pool()
     if verbose:
         display_cards(pool)
+        print(mod_breakdown(pool))
     decks = {}
     if yourDeck and len(yourDeck) == DECK_SIZE:
         decks['YOU'] = yourDeck.values()
@@ -135,8 +145,9 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False):
     ])
     # decks['strong'] = stoneAgePool[0:5] + ironAgePool[0:5] + crystalAgePool[0:10]
     decks['maxHard'] = ai.build_deck(pool, [ai.max_hard_synergy_strat()])
-    decks['maxHardStone'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.STONE), ai.max_hard_synergy_strat()])
-    decks['maxHardStoneIron'] = ai.build_deck(pool, [
+    decks['stoneMaxHard'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.STONE), ai.max_hard_synergy_strat()])
+    decks['maxHardStone'] = ai.build_deck(pool, [ai.max_hard_synergy_strat(), ai.breakdown_strat(ai.Breakdown.STONE)])
+    decks['stoneIronMaxHard'] = ai.build_deck(pool, [
         ai.breakdown_strat(ai.Breakdown.STONE_IRON),
         ai.max_hard_synergy_strat(),
         ai.breakdown_strat(ai.Breakdown.STONE)
@@ -151,6 +162,12 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False):
         ai.breakdown_strat(ai.Breakdown.STONE),
         ai.fill_strat(15),
         ai.breakdown_strat(ai.Breakdown.IRON)
+    ])
+    decks['stoneIronLopsided'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.STONE_IRON),
+        ai.strong_strat(),
+        ai.lopsided_fill_strat(12),
+        ai.easy_synergy_strat()
     ])
     decks['18StoneIron'] = ai.build_deck(pool, [
         ai.breakdown_strat(ai.Breakdown.STONE),

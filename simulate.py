@@ -4,8 +4,12 @@ from card import generate_pool
 from play import simulate, display_cards
 
 
+verbose = False
+
+
 def multiSim(idx):
-    return simulate({}, 0)
+    global verbose
+    return simulate({}, 0, verbose=verbose)
 
 
 def combineWins(wins1, wins2):
@@ -23,6 +27,8 @@ try:
     print(f'simulating {sims} times')
 except (IndexError, ValueError):
     print('simulating 10 times')
+if sims == 1:
+    verbose = True
 pool = Pool()
 for simWins, simGamesPlayed in pool.imap_unordered(multiSim, range(sims)):
     wins = combineWins(wins, simWins)

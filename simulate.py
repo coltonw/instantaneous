@@ -1,6 +1,5 @@
 import sys
 from multiprocessing import Pool
-from math import ceil
 from card import generate_pool
 from play import simulate, display_cards
 
@@ -67,4 +66,4 @@ for name, pct in winPct:
     print('{0} win%: {1:.0f}'.format(name, pct))
 print()
 for name, pct in highestWinPct:
-    print('{0} best in pool %: {1:.0f}'.format(name, ceil(pct)))
+    print('{0} best in pool %: {1:.1f}'.format(name, pct))

@@ -2,7 +2,7 @@ import shutil
 import sys
 from functools import reduce
 from textwrap import wrap
-from card import generate_pool, Mod, Race, Profession
+from card import generate_pool, Mod, Race, Profession, USEFUL_PROFS
 from match import DECK_SIZE, match, deck_summary
 import ai
 
@@ -155,7 +155,7 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False):
     decks['counterMaxHard'] = ai.build_deck(pool, [ai.counter_max_hard_strat()])
     for race in Race:
         decks[f'{race.name.lower()}HardSynergy'] = ai.build_deck(pool, [ai.hard_synergy_strat(race)])
-    for prof in Profession:
+    for prof in USEFUL_PROFS:
         decks[f'{prof.name.lower()}HardSynergy'] = ai.build_deck(pool, [ai.hard_synergy_strat(prof)])
 
     decks['strongStoneIron'] = ai.build_deck(pool, [ai.strong_strat(), ai.breakdown_strat(ai.Breakdown.STONE_IRON)])
@@ -197,6 +197,7 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False):
         ai.fill_strat(18),
         ai.breakdown_strat(ai.Breakdown.CRYSTAL)
     ])
+    decks['strong'] = ai.build_deck(pool, [])
 
     for i in range(3):
         decks[f'rand{i}'] = ai.random_good_strategy(pool)

@@ -26,7 +26,7 @@ def _get_card_relative_strength(card):
         return 3
     if card.mod == Mod.EASY_MATCHING_SYNERGY or card.mod == Mod.EASY_NONMATCHING_SYNERGY:
         return 2
-    elif card.mod == Mod.WEAK or card.mod == Mod.HARD_MATCHING_SYNERGY or card.mod == Mod.HARD_NONMATCHING_SYNERGY:
+    elif card.mod == Mod.WEAK or card.mod == Mod.HARD_MATCHING_SYNERGY or card.mod == Mod.HARD_NONMATCHING_SYNERGY or card.mod == Mod.SPECIAL:
         return -1
     elif card.mod != Mod.NORMAL:
         return 1
@@ -127,8 +127,11 @@ def _apply_filter_strat(pool, deckMap, test, breakdown, ageCounts, breakout=Fals
     else:
         (deckMap, ageCounts) = _add_cards_with_breakdown(matching, deckMap, breakdown, ageCounts, count)
     cardsAdded = len(deckMap) - startingSize
-    if breakout and (count is None or cardsAdded < count):
-        _add_cards(matching, deckMap, ageCounts, count - cardsAdded)
+    if breakout and count is None:
+        if count is None:
+            _add_cards(matching, deckMap, ageCounts)
+        elif cardsAdded < count:
+            _add_cards(matching, deckMap, ageCounts, count - cardsAdded)
     return (deckMap, breakdown, ageCounts)
 
 
@@ -146,6 +149,12 @@ def breakdown_strat(newBreakdown):
 def strong_strat(breakout=False):
     def strat(pool, deckMap, breakdown, ageCounts):
         return _apply_filter_strat(pool, deckMap, lambda c: c.mod == Mod.STRONG, breakdown, ageCounts, breakout=breakout)
+    return strat
+
+
+def special_strat():
+    def strat(pool, deckMap, breakdown, ageCounts):
+        return _apply_filter_strat(pool, deckMap, lambda c: c.mod == Mod.SPECIAL, breakdown, ageCounts, breakout=True)
     return strat
 
 

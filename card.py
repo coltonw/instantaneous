@@ -34,6 +34,11 @@ class Mod(Enum):
     HARD_MATCHING_SYNERGY = auto()
     HARD_NONMATCHING_SYNERGY = auto()
     COUNTER = auto()
+    SPECIAL = auto()
+
+
+class Special(Enum):
+    STAIRS = auto()
 
 
 USEFUL_PROFS = [prof for prof in list(Profession) if prof != Profession.PEASANT]
@@ -252,6 +257,11 @@ def modify_card(card, mod):
         card.mod = mod
 
 
+def add_special_cards(pool):
+    pool.append(Card([1, 3, 6], None, choice(list(Race)), choice(USEFUL_PROFS), desc='stair', mod=Mod.SPECIAL))
+    return pool
+
+
 def generate_pool():
     pool = generate_basic_pool()
     for card in pool:
@@ -262,4 +272,5 @@ def generate_pool():
             if r < currentOdds:
                 modify_card(card, mod)
                 break
-    return [c for c in pool if c.mod != Mod.DELETE]
+    pool = [c for c in pool if c.mod != Mod.DELETE]
+    return add_special_cards(pool)

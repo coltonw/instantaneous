@@ -198,6 +198,7 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False):
         ai.breakdown_strat(ai.Breakdown.CRYSTAL)
     ])
     decks['strong'] = ai.build_deck(pool, [])
+    decks['specialStrong'] = ai.build_deck(pool, [ai.special_strat()])
 
     for i in range(3):
         decks[f'rand{i}'] = ai.random_good_strategy(pool)

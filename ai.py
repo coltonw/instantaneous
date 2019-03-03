@@ -188,21 +188,31 @@ def hard_synergy_strat(synergy):
     return strat
 
 
+def _get_hard_synergies(pool):
+    hardSynergies = {}
+    for card in pool:
+        if card.mod == Mod.HARD_MATCHING_SYNERGY or card.mod == Mod.HARD_NONMATCHING_SYNERGY:
+            hardSynergy = hardSynergies.get(card.synergy, {})
+            hardSynergy[card.cardId] = card
+            hardSynergies[card.synergy] = hardSynergy
+    return hardSynergies
+
+
+def _get_max_synergy(hardSynergies):
+    maxSynergy = None
+    maxSynergyCardDict = {}
+    for synergy, cardDict in hardSynergies.items():
+        if len(cardDict) > len(maxSynergyCardDict):
+            maxSynergy = synergy
+            maxSynergyCardDict = cardDict
+    return (maxSynergy, maxSynergyCardDict)
+
+
 def max_hard_synergy_strat():
     def strat(pool, deckMap, breakdown, ageCounts):
         # dict keyed by synergy of dicts of cards keyed by cardId
-        hardSynergies = {}
-        for card in pool:
-            if card.mod == Mod.HARD_MATCHING_SYNERGY or card.mod == Mod.HARD_NONMATCHING_SYNERGY:
-                hardSynergy = hardSynergies.get(card.synergy, {})
-                hardSynergy[card.cardId] = card
-                hardSynergies[card.synergy] = hardSynergy
-        maxSynergy = None
-        maxSynergyCardDict = {}
-        for synergy, cardDict in hardSynergies.items():
-            if len(cardDict) > len(maxSynergyCardDict):
-                maxSynergy = synergy
-                maxSynergyCardDict = cardDict
+        hardSynergies = _get_hard_synergies(pool)
+        (maxSynergy, maxSynergyCardDict) = _get_max_synergy(hardSynergies)
         # print(maxSynergy.name, len(maxSynergyCardDict), maxSynergyCardDict)
         deckMap.update(maxSynergyCardDict)
 
@@ -214,6 +224,18 @@ def max_hard_synergy_strat():
                                    breakout=True, count=cardsNeeded - cardsMatching)
     return strat
 
+
+def counter_max_hard_strat():
+    def strat(pool, deckMap, breakdown, ageCounts):
+        # dict keyed by synergy of dicts of cards keyed by cardId
+        hardSynergies = _get_hard_synergies(pool)
+        (maxSynergy, maxSynergyCardDict) = _get_max_synergy(hardSynergies)
+        # print(maxSynergy.name)
+
+        def counterTest(c):
+            return c.synergy == maxSynergy and c.mod == Mod.COUNTER
+        return _apply_filter_strat(pool, deckMap, counterTest, breakdown, ageCounts)
+    return strat
 
 # gives specific number of cards no matter what
 def fill_strat(count):

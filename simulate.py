@@ -1,5 +1,6 @@
 import sys
 from multiprocessing import Pool
+from math import ceil
 from card import generate_pool
 from play import simulate, display_cards
 
@@ -19,7 +20,22 @@ def combineWins(wins1, wins2):
     return totalWins
 
 
+def combineHighestWins(highestWins, wins):
+    names = []
+    maxWins = 0
+    for name, w in wins.items():
+        if w == maxWins:
+            names.append(name)
+        if w > maxWins:
+            names = [name]
+            maxWins = w
+    for name in names:
+        highestWins[name] = highestWins.get(name, 0) + 1
+    return highestWins
+
+
 wins = {}
+highestWins = {}
 gamesPlayed = 0
 sims = 10
 try:
@@ -32,6 +48,7 @@ if sims == 1:
 pool = Pool()
 for simWins, simGamesPlayed in pool.imap_unordered(multiSim, range(sims)):
     wins = combineWins(wins, simWins)
+    highestWins = combineHighestWins(highestWins, simWins)
     gamesPlayed += simGamesPlayed
 
 
@@ -39,6 +56,15 @@ winPct = []
 for deckName, wins in wins.items():
     winPct.append((deckName, wins / gamesPlayed * 100))
 winPct = sorted(winPct, key=lambda t: t[1], reverse=True)
+
+highestWinPct = []
+for deckName, wins in highestWins.items():
+    highestWinPct.append((deckName, wins / sims * 100))
+highestWinPct = sorted(highestWinPct, key=lambda t: t[1], reverse=True)
+
 print()
 for name, pct in winPct:
     print('{0} win%: {1:.0f}'.format(name, pct))
+print()
+for name, pct in highestWinPct:
+    print('{0} best in pool %: {1:.0f}'.format(name, ceil(pct)))

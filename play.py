@@ -152,6 +152,7 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False):
         ai.max_hard_synergy_strat(),
         ai.breakdown_strat(ai.Breakdown.STONE)
     ])
+    decks['counterMaxHard'] = ai.build_deck(pool, [ai.counter_max_hard_strat()])
     for race in Race:
         decks[f'{race.name.lower()}HardSynergy'] = ai.build_deck(pool, [ai.hard_synergy_strat(race)])
     for prof in Profession:

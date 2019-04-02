@@ -259,6 +259,7 @@ def modify_card(card, mod):
 
 def add_special_cards(pool):
     pool.append(Card([1, 3, 6], None, choice(list(Race)), choice(USEFUL_PROFS), desc='stair', mod=Mod.SPECIAL))
+    # pool.append(Card([8, 0, 0], None, choice(list(Race)), choice(USEFUL_PROFS), desc='stone-ly', mod=Mod.SPECIAL))\
     return pool
 
 

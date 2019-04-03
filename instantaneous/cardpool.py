@@ -1,28 +1,37 @@
-from game.
+from instantaneous.game.card import generate_pool
+import json
 
 from flask import (
-    Blueprint, flash
+    Blueprint
 )
+from werkzeug.exceptions import abort
 
 bp = Blueprint('cardpool', __name__, url_prefix='/cardpool')
 
 # big old airquotes around the word database here
-database = {}
+database = []
 
 @bp.route('/new', methods=['POST'])
 def new_card_pool():
 
-    # TODO: actually have the card pool generated here and have it returned via json and/or protobuf
-    flash('Not yet implemented')
+    pool = generate_pool()
 
-    return ''
+    database.append(pool)
+
+    # TODO: use protobuff here and also return the id
+    poolStrings = list(map(str, pool))
+    return json.dumps(poolStrings)
 
 
 @bp.route('/<int:id>/submitdeck', methods=['POST'])
 def submit_deck(id):
-    cardpool = database(id)
+    try:
+        cardpool = database[id]
 
-    # TODO: actually have the game played here and have it return json and/or protobuf
-    flash('Not yet implemented')
+        # TODO: take deck as input and calculate game result
 
-    return ''
+        # TODO: use protobuff here and return game result rather than the pool back
+        poolStrings = list(map(str, cardpool))
+        return json.dumps(poolStrings)
+    except IndexError:
+        abort(404, "cardpool id {0} doesn't exist.".format(id))

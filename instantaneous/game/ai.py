@@ -1,8 +1,8 @@
 import collections
 from enum import Flag, auto
 from random import choices, randrange, sample, shuffle
-from card import Age, Mod, Profession, Race, EASY_PROF_SYNERGY_THRESHOLD, EASY_RACE_SYNERGY_THRESHOLD, HARD_PROF_SYNERGY_THRESHOLD, HARD_RACE_SYNERGY_THRESHOLD
-from match import DECK_SIZE
+from .card import Age, Mod, Profession, Race, EASY_PROF_SYNERGY_THRESHOLD, EASY_RACE_SYNERGY_THRESHOLD, HARD_PROF_SYNERGY_THRESHOLD, HARD_RACE_SYNERGY_THRESHOLD
+from .match import DECK_SIZE
 
 
 class Breakdown(Flag):

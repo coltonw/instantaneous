@@ -2,9 +2,9 @@ import shutil
 import sys
 from functools import reduce
 from textwrap import wrap
-from card import generate_pool, Mod, Race, Profession, USEFUL_PROFS
-from match import DECK_SIZE, match, deck_summary
-import ai
+from instantaneous.game.card import generate_pool, Mod, Race, Profession, USEFUL_PROFS
+from instantaneous.game.match import DECK_SIZE, match, deck_summary
+from instantaneous.game import ai
 
 box = {
     'h': '─', 'v': '│',

@@ -1,7 +1,7 @@
 import sys
 from multiprocessing import Pool
-from card import generate_pool
-from play import simulate, display_cards
+from instantaneous.game.card import generate_pool
+from instantaneous.game.play import simulate, display_cards
 
 
 verbose = False

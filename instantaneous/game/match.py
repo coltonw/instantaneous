@@ -1,5 +1,5 @@
 from functools import reduce
-from card import Age, Mod
+from instantaneous.game.card import Age, Mod
 
 # these are one less than 4 base strength cards.
 # This means you can win an age with 2 strong cards and 1 base strength card or with 1 really strong card and 2 base strength cards

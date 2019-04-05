@@ -2,11 +2,21 @@ from enum import Enum, auto
 from math import ceil
 from random import random, choice
 
+from instantaneous.proto import cardpool_pb2
+
 
 class Age(Enum):
     STONE = 1
     IRON = 2
     CRYSTAL = 4
+
+    def to_proto(self):
+        if self is Age.STONE:
+            return cardpool_pb2.Card.Age.STONE
+        if self is Age.IRON:
+            return cardpool_pb2.Card.Age.IRON
+        if self is Age.CRYSTAL:
+            return cardpool_pb2.Card.Age.CRYSTAL
 
 
 class Race(Enum):
@@ -80,6 +90,14 @@ class Card:
 
     def calc_strength(self, ageIdx, deck, oppDeck):
         return self.calc(self, ageIdx, deck, oppDeck)
+
+    def to_proto(self):
+        protoCard = cardpool_pb2.Card()
+        protoCard.id = self.cardId
+        protoCard.stone_strength = self.strength[0]
+        protoCard.iron_strength = self.strength[1]
+        protoCard.crystal_strength = self.strength[2]
+        protoCard.age = self.age.to_proto()
 
 
 def generate_basic_pool():
@@ -275,3 +293,4 @@ def generate_pool():
                 break
     pool = [c for c in pool if c.mod != Mod.DELETE]
     return add_special_cards(pool)
+

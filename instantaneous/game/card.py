@@ -12,17 +12,25 @@ class Age(Enum):
 
     def to_proto(self):
         if self is Age.STONE:
-            return cardpool_pb2.Card.Age.STONE
+            return cardpool_pb2.Card.STONE
         if self is Age.IRON:
-            return cardpool_pb2.Card.Age.IRON
+            return cardpool_pb2.Card.IRON
         if self is Age.CRYSTAL:
-            return cardpool_pb2.Card.Age.CRYSTAL
+            return cardpool_pb2.Card.CRYSTAL
 
 
 class Race(Enum):
     BEASTMAN = auto()
     HUMAN = auto()
     UNDEAD = auto()
+
+    def to_proto(self):
+        if self is Race.BEASTMAN:
+            return cardpool_pb2.Card.BEASTMAN
+        if self is Race.HUMAN:
+            return cardpool_pb2.Card.HUMAN
+        if self is Race.UNDEAD:
+            return cardpool_pb2.Card.UNDEAD
 
 
 class Profession(Enum):
@@ -33,6 +41,19 @@ class Profession(Enum):
     WOODSMAN = auto()
     PEASANT = auto()
 
+    def to_proto(self):
+        if self is Profession.ALCHEMIST:
+            return cardpool_pb2.Card.ALCHEMIST
+        if self is Profession.BATTLETECH:
+            return cardpool_pb2.Card.BATTLETECH
+        if self is Profession.CONJUROR:
+            return cardpool_pb2.Card.CONJUROR
+        if self is Profession.PROPHET:
+            return cardpool_pb2.Card.PROPHET
+        if self is Profession.WOODSMAN:
+            return cardpool_pb2.Card.WOODSMAN
+        if self is Profession.PEASANT:
+            return cardpool_pb2.Card.PEASANT
 
 class Mod(Enum):
     NORMAL = auto()
@@ -98,6 +119,10 @@ class Card:
         protoCard.iron_strength = self.strength[1]
         protoCard.crystal_strength = self.strength[2]
         protoCard.age = self.age.to_proto()
+        protoCard.race = self.race.to_proto()
+        protoCard.prof = self.prof.to_proto()
+
+        return protoCard
 
 
 def generate_basic_pool():

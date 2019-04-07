@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\"instantaneous/proto/cardpool.proto\",\n\x08\x43\x61rdPool\x12\n\n\x02id\x18\x01 \x01(\t\x12\x14\n\x05\x63\x61rds\x18\x02 \x03(\x0b\x32\x05.Card\")\n\x04\x44\x65\x63k\x12\x0f\n\x07pool_id\x18\x01 \x01(\t\x12\x10\n\x08\x63\x61rd_ids\x18\x02 \x03(\x05\"^\n\nDeckResult\x12\x10\n\x08win_rate\x18\x01 \x01(\x02\x12\x0c\n\x04wins\x18\x02 \x01(\x05\x12\x0e\n\x06losses\x18\x03 \x01(\x05\x12\x0c\n\x04rank\x18\x04 \x01(\x05\x12\x12\n\npercentile\x18\x05 \x01(\x02\"\xbe\x03\n\x04\x43\x61rd\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x16\n\x0estone_strength\x18\x02 \x01(\x05\x12\x15\n\riron_strength\x18\x03 \x01(\x05\x12\x18\n\x10\x63rystal_strength\x18\x04 \x01(\x05\x12\x16\n\x03\x61ge\x18\x05 \x01(\x0e\x32\t.Card.Age\x12\x18\n\x04race\x18\x06 \x01(\x0e\x32\n.Card.Race\x12\x1e\n\x04prof\x18\x07 \x01(\x0e\x32\x10.Card.Profession\x12\x0c\n\x04\x64\x65sc\x18\x08 \x01(\t\x12 \n\x0crace_synergy\x18\t \x01(\x0e\x32\n.Card.Race\x12&\n\x0cprof_synergy\x18\n \x01(\x0e\x32\x10.Card.Profession\"\'\n\x03\x41ge\x12\t\n\x05STONE\x10\x00\x12\x08\n\x04IRON\x10\x01\x12\x0b\n\x07\x43RYSTAL\x10\x02\"+\n\x04Race\x12\x0c\n\x08\x42\x45\x41STMAN\x10\x00\x12\t\n\x05HUMAN\x10\x01\x12\n\n\x06UNDEAD\x10\x02\"a\n\nProfession\x12\x0b\n\x07PEASANT\x10\x00\x12\r\n\tALCHEMIST\x10\x01\x12\x0e\n\nBATTLETECH\x10\x02\x12\x0c\n\x08\x43ONJUROR\x10\x03\x12\x0b\n\x07PROPHET\x10\x04\x12\x0c\n\x08WOODSMAN\x10\x05\x62\x06proto3')
+  serialized_pb=_b('\n\"instantaneous/proto/cardpool.proto\",\n\x08\x43\x61rdPool\x12\n\n\x02id\x18\x01 \x01(\t\x12\x14\n\x05\x63\x61rds\x18\x02 \x03(\x0b\x32\x05.Card\")\n\x04\x44\x65\x63k\x12\x0f\n\x07pool_id\x18\x01 \x01(\t\x12\x10\n\x08\x63\x61rd_ids\x18\x02 \x03(\x05\"^\n\nDeckResult\x12\x10\n\x08win_rate\x18\x01 \x01(\x02\x12\x0c\n\x04wins\x18\x02 \x01(\x05\x12\x0e\n\x06losses\x18\x03 \x01(\x05\x12\x0c\n\x04rank\x18\x04 \x01(\x05\x12\x12\n\npercentile\x18\x05 \x01(\x02\"\xea\x03\n\x04\x43\x61rd\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x16\n\x0estone_strength\x18\x02 \x01(\x05\x12\x15\n\riron_strength\x18\x03 \x01(\x05\x12\x18\n\x10\x63rystal_strength\x18\x04 \x01(\x05\x12\x16\n\x03\x61ge\x18\x05 \x01(\x0e\x32\t.Card.Age\x12\x18\n\x04race\x18\x06 \x01(\x0e\x32\n.Card.Race\x12\x1e\n\x04prof\x18\x07 \x01(\x0e\x32\x10.Card.Profession\x12\x0c\n\x04\x64\x65sc\x18\x08 \x01(\t\x12 \n\x0crace_synergy\x18\t \x01(\x0e\x32\n.Card.Race\x12&\n\x0cprof_synergy\x18\n \x01(\x0e\x32\x10.Card.Profession\"5\n\x03\x41ge\x12\x0c\n\x08NONE_AGE\x10\x00\x12\t\n\x05STONE\x10\x01\x12\x08\n\x04IRON\x10\x02\x12\x0b\n\x07\x43RYSTAL\x10\x03\":\n\x04Race\x12\r\n\tNONE_RACE\x10\x00\x12\x0c\n\x08\x42\x45\x41STMAN\x10\x01\x12\t\n\x05HUMAN\x10\x02\x12\n\n\x06UNDEAD\x10\x03\"p\n\nProfession\x12\r\n\tNONE_PROF\x10\x00\x12\r\n\tALCHEMIST\x10\x01\x12\x0e\n\nBATTLETECH\x10\x02\x12\x0c\n\x08\x43ONJUROR\x10\x03\x12\x0b\n\x07PROPHET\x10\x04\x12\x0c\n\x08WOODSMAN\x10\x05\x12\x0b\n\x07PEASANT\x10\x06\x62\x06proto3')
 )
 
 
@@ -32,22 +32,26 @@ _CARD_AGE = _descriptor.EnumDescriptor(
   file=DESCRIPTOR,
   values=[
     _descriptor.EnumValueDescriptor(
-      name='STONE', index=0, number=0,
+      name='NONE_AGE', index=0, number=0,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='IRON', index=1, number=1,
+      name='STONE', index=1, number=1,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='CRYSTAL', index=2, number=2,
+      name='IRON', index=2, number=2,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='CRYSTAL', index=3, number=3,
       serialized_options=None,
       type=None),
   ],
   containing_type=None,
   serialized_options=None,
   serialized_start=487,
-  serialized_end=526,
+  serialized_end=540,
 )
 _sym_db.RegisterEnumDescriptor(_CARD_AGE)
 
@@ -58,22 +62,26 @@ _CARD_RACE = _descriptor.EnumDescriptor(
   file=DESCRIPTOR,
   values=[
     _descriptor.EnumValueDescriptor(
-      name='BEASTMAN', index=0, number=0,
+      name='NONE_RACE', index=0, number=0,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='HUMAN', index=1, number=1,
+      name='BEASTMAN', index=1, number=1,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='UNDEAD', index=2, number=2,
+      name='HUMAN', index=2, number=2,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='UNDEAD', index=3, number=3,
       serialized_options=None,
       type=None),
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=528,
-  serialized_end=571,
+  serialized_start=542,
+  serialized_end=600,
 )
 _sym_db.RegisterEnumDescriptor(_CARD_RACE)
 
@@ -84,7 +92,7 @@ _CARD_PROFESSION = _descriptor.EnumDescriptor(
   file=DESCRIPTOR,
   values=[
     _descriptor.EnumValueDescriptor(
-      name='PEASANT', index=0, number=0,
+      name='NONE_PROF', index=0, number=0,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
@@ -107,11 +115,15 @@ _CARD_PROFESSION = _descriptor.EnumDescriptor(
       name='WOODSMAN', index=5, number=5,
       serialized_options=None,
       type=None),
+    _descriptor.EnumValueDescriptor(
+      name='PEASANT', index=6, number=6,
+      serialized_options=None,
+      type=None),
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=573,
-  serialized_end=670,
+  serialized_start=602,
+  serialized_end=714,
 )
 _sym_db.RegisterEnumDescriptor(_CARD_PROFESSION)
 
@@ -344,7 +356,7 @@ _CARD = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=224,
-  serialized_end=670,
+  serialized_end=714,
 )
 
 _CARDPOOL.fields_by_name['cards'].message_type = _CARD

@@ -18,6 +18,8 @@ message DeckResult {
     float percentile = 5;
 }
 
+// This card is for describing all displayable information to the client so that they can show the card to the user.
+// Card functionality is all done server side right now so that is not transfered at all.
 message Card {
     int32 id = 1;
     int32 stone_strength = 2;
@@ -25,32 +27,33 @@ message Card {
     int32 crystal_strength = 4;
 
     enum Age {
-        STONE = 0;
-        IRON = 1;
-        CRYSTAL = 2;
+        NONE_AGE = 0;
+        STONE = 1;
+        IRON = 2;
+        CRYSTAL = 3;
     }
     Age age = 5;
 
     enum Race {
-        BEASTMAN = 0;
-        HUMAN = 1;
-        UNDEAD = 2;
+        NONE_RACE = 0;
+        BEASTMAN = 1;
+        HUMAN = 2;
+        UNDEAD = 3;
     }
     Race race = 6;
 
     enum Profession {
-        PEASANT = 0;
+        NONE_PROF = 0;
         ALCHEMIST = 1;
         BATTLETECH = 2;
         CONJUROR = 3;
         PROPHET = 4;
         WOODSMAN = 5;
+        PEASANT = 6;
     }
     Profession prof = 7;
 
     string desc = 8;
     Race race_synergy = 9;
     Profession prof_synergy = 10;
-    // self.mod = mod
-    // self.calc = calc
 }

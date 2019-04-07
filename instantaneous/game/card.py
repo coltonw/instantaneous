@@ -121,6 +121,11 @@ class Card:
         protoCard.age = self.age.to_proto()
         protoCard.race = self.race.to_proto()
         protoCard.prof = self.prof.to_proto()
+        protoCard.desc = self.desc
+        if isinstance(self.synergy, Race):
+            protoCard.race_synergy = self.synergy.to_proto()
+        elif isinstance(self.synergy, Profession):
+            protoCard.prof_synergy = self.synergy
 
         return protoCard
 

@@ -1,8 +1,10 @@
-from instantaneous.game.card import generate_pool
+from instantaneous.game.card import generate_pool, pool_to_proto
 import json
+import io
 
 from flask import (
-    Blueprint
+    Blueprint,
+    send_file
 )
 from werkzeug.exceptions import abort
 
@@ -13,14 +15,15 @@ database = []
 
 @bp.route('/new', methods=['POST'])
 def new_card_pool():
-
     pool = generate_pool()
-
     database.append(pool)
+    # TODO: generate an id?
 
-    # TODO: use protobuff here and also return the id
-    poolStrings = list(map(str, pool))
-    return json.dumps(poolStrings)
+    return send_file(
+        io.BytesIO(pool_to_proto(pool).SerializeToString()),
+        attachment_filename='pool.protodata',
+        mimetype='attachment/x-protobuf'
+    )
 
 
 @bp.route('/<int:id>/submitdeck', methods=['POST'])

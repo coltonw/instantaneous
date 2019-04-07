@@ -55,6 +55,7 @@ class Profession(Enum):
         if self is Profession.PEASANT:
             return cardpool_pb2.Card.PEASANT
 
+
 class Mod(Enum):
     NORMAL = auto()
     DELETE = auto()
@@ -118,14 +119,17 @@ class Card:
         protoCard.stone_strength = self.strength[0]
         protoCard.iron_strength = self.strength[1]
         protoCard.crystal_strength = self.strength[2]
-        protoCard.age = self.age.to_proto()
-        protoCard.race = self.race.to_proto()
-        protoCard.prof = self.prof.to_proto()
+        if self.age is not None:
+            protoCard.age = self.age.to_proto()
+        if self.race is not None:
+            protoCard.race = self.race.to_proto()
+        if self.prof is not None:
+            protoCard.prof = self.prof.to_proto()
         protoCard.desc = self.desc
         if isinstance(self.synergy, Race):
             protoCard.race_synergy = self.synergy.to_proto()
         elif isinstance(self.synergy, Profession):
-            protoCard.prof_synergy = self.synergy
+            protoCard.prof_synergy = self.synergy.to_proto()
 
         return protoCard
 
@@ -306,6 +310,7 @@ def modify_card(card, mod):
 
 
 def add_special_cards(pool):
+    # TODO: Add a bunch more special cards and add rules for how they get added to the pool
     pool.append(Card([1, 3, 6], None, choice(list(Race)), choice(USEFUL_PROFS), desc='stair', mod=Mod.SPECIAL))
     # pool.append(Card([8, 0, 0], None, choice(list(Race)), choice(USEFUL_PROFS), desc='stone-ly', mod=Mod.SPECIAL))\
     return pool
@@ -324,3 +329,10 @@ def generate_pool():
     pool = [c for c in pool if c.mod != Mod.DELETE]
     return add_special_cards(pool)
 
+
+def pool_to_proto(pool, id='0'):
+    protoPool = cardpool_pb2.CardPool()
+    protoPool.id = id
+    protoCards = map(lambda card: card.to_proto(), pool)
+    protoPool.cards.extend(protoCards)
+    return protoPool

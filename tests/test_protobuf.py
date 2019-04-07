@@ -11,3 +11,10 @@ def test_card_to_proto():
     assert cardProto.prof is cardpool_pb2.Card.ALCHEMIST
     assert cardProto.race_synergy is cardpool_pb2.Card.HUMAN
     assert cardProto.prof_synergy is cardpool_pb2.Card.NONE_PROF
+
+
+def test_cardpool_to_proto():
+    p = card.generate_pool()
+    protoPool = card.pool_to_proto(p, 'test')
+    assert protoPool.id == 'test'
+    assert len(protoPool.cards) == len(p)

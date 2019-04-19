@@ -5,6 +5,7 @@ from textwrap import wrap
 from instantaneous.game.card import generate_pool, Mod, Race, Profession, USEFUL_PROFS
 from instantaneous.game.match import DECK_SIZE, match, deck_summary
 from instantaneous.game import ai
+from instantaneous.proto import cardpool_pb2
 
 box = {
     'h': '─', 'v': '│',
@@ -93,41 +94,39 @@ def mod_breakdown(pool):
     return f'(strong={mod_count(Mod.STRONG, pool)};easy={mod_count(Mod.EASY_MATCHING_SYNERGY, pool) + mod_count(Mod.EASY_NONMATCHING_SYNERGY, pool)})'
 
 
-# TODO: fix this?
-def play():
-    pool = generate_pool()
-    deckMap = {}
-    try:
-        # idea: input comma separated ints to enable or negative ints to disable cards in your deck
-        while len(deckMap) != DECK_SIZE:
-            deckChange = input('?')
-            changes = deckChange.split(',')
-            for change in changes:
-                # cannot remove 0?
-                if change.startswith('-'):
-                    del deckMap[abs(int(change))]
-                else:
-                    deckMap[int(change)] = pool[int(change)]
-            print(f'{sorted(list(deckMap.keys()))}, len: {len(deckMap)}')
-    except ValueError:
-        print('Skipping your deck')
-
-# print(f'Pool:\n{pool}\n')
-# stoneAgePool = list(filter(lambda card: card.age == Age.STONE, pool))
-# ironAgePool = list(filter(lambda card: card.age == Age.IRON, pool))
-# crystalAgePool = list(filter(lambda card: card.age == Age.CRYSTAL, pool))
-# strongPool = list(filter(lambda card: card.race == Race.BEASTMAN, pool))
-# weakPool = list(filter(lambda card: card.race != Race.BEASTMAN, pool))
+def play(yourDeckProto, pool):
+    yourDeck = []
+    for deckCardId in yourDeckProto.card_ids:
+        for card in pool:
+            if card.cardId == deckCardId:
+                yourDeck.append(card)
+    (wins, gamesPlayed) = simulate({}, 0, yourDeck=yourDeck, verbose=True, pool=pool)
+    result = cardpool_pb2.DeckResult()
+    result.wins = wins['YOU']
+    # right now, a tie is a loss
+    result.losses = gamesPlayed - wins['YOU']
+    result.win_rate = wins['YOU'] / gamesPlayed
+    rank = 1
+    for enemyWins in wins.values():
+        if enemyWins > wins['YOU']:
+            rank = rank + 1
+    result.rank = rank
+    # double check this math
+    result.percentile = (len(wins) - rank + 1) / len(wins)
+    return result
 
 
-def simulate(wins, gamesPlayed, yourDeck=None, verbose=False):
-    pool = generate_pool()
+
+def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None):
+    if not pool:
+        pool = generate_pool()
     if verbose:
-        display_cards(pool)
+        # this is perhaps TOO verbose
+        # display_cards(pool)
         print(mod_breakdown(pool))
     decks = {}
     if yourDeck and len(yourDeck) == DECK_SIZE:
-        decks['YOU'] = yourDeck.values()
+        decks['YOU'] = yourDeck
         display_cards(decks['YOU'])
     decks['even'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.EVEN)])
     decks['stoneOnly'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.STONE)])
@@ -203,6 +202,7 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False):
     for i in range(3):
         decks[f'rand{i}'] = ai.random_good_strategy(pool)
 
+    # TODO: perf improvement. Does every match twice. Inefficient.
     for name1, deck1 in decks.items():
         wins[name1] = wins.get(name1, 0)
         if verbose:

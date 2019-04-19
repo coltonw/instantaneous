@@ -1,4 +1,5 @@
 from instantaneous.game.card import generate_pool, pool_to_proto
+from instantaneous.game import play
 from instantaneous.proto import cardpool_pb2
 import json
 import io
@@ -31,14 +32,14 @@ def new_card_pool():
 @bp.route('/<int:id>/submitdeck', methods=['POST'])
 def submit_deck(id):
     try:
-        cardpool = database[id]
+        cardPool = database[id]
         data = request.get_data()
         deck = cardpool_pb2.Deck()
         deck.ParseFromString(data)
         print(str(deck.card_ids))
         # TODO: take deck as input and calculate game result
 
-        deckResult = cardpool_pb2.DeckResult()
+        deckResult = play.play(deck, cardPool)
         # TODO: actually use submitted deck and fill in deck result
         return send_file(
             io.BytesIO(deckResult.SerializeToString()),

@@ -17,7 +17,7 @@ def _age(ageIdx, deck1, deck2):
 
 
 def simple_deck_strength(deck):
-    return _deck_strength(0, deck, []) + _deck_strength(1, deck, []) + _deck_strength(2, deck, [])
+    return _deck_strength(0, deck, []) * 2 + _deck_strength(1, deck, []) + _deck_strength(2, deck, [])
 
 
 def match(deck1, deck2, verbose=False):

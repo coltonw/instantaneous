@@ -1,8 +1,7 @@
 import shutil
-import sys
 from functools import reduce
 from textwrap import wrap
-from instantaneous.game.card import generate_pool, Mod, Race, Profession, USEFUL_PROFS
+from instantaneous.game.card import generate_pool, Mod, Race, USEFUL_PROFS
 from instantaneous.game.match import DECK_SIZE, match, deck_summary
 from instantaneous.game import ai
 from instantaneous.proto import cardpool_pb2
@@ -198,6 +197,9 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None):
     ])
     decks['strong'] = ai.build_deck(pool, [])
     decks['specialStrong'] = ai.build_deck(pool, [ai.special_strat()])
+    # 4 seconds / 6000 rounds seems to be the right number for best results
+    decks['monteCarlo'] = ai.monte_carlo_deck(pool, iterationLimit=6000)
+    # decks['monteCarlo'] = ai.monte_carlo_deck(pool, timeLimit=4000)
 
     for i in range(3):
         decks[f'rand{i}'] = ai.random_good_strategy(pool)

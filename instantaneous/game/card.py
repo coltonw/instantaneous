@@ -1,6 +1,7 @@
 from enum import Enum, auto
 from math import ceil
 from random import random, choice
+from functools import reduce
 
 from instantaneous.proto import cardpool_pb2
 
@@ -176,7 +177,7 @@ def generate_easy_synergy(card, matching):
         return self.strength[ageIdx]
     card.calc = calc_synergy_strength
     card.synergy = synergy
-    card.desc = f'{threshold}+ {synergy.name.lower().capitalize()} for +{card.age.value}str'
+    card.desc = f'If you have {threshold} or more {synergy.name.lower().capitalize()}, for +{card.age.value} strength'
 
 
 def generate_hard_synergy(card, matching):

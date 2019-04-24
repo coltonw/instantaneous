@@ -9,12 +9,15 @@ DECK_SIZE = 20
 
 
 def _deck_strength(ageIdx, deck, oppDeck):
-    deckStrengths = map(lambda card: card.calc_strength(ageIdx, deck, oppDeck), deck)
-    return sum(deckStrengths)
+    return sum([card.calc_strength(ageIdx, deck, oppDeck) for card in deck])
 
 
 def _age(ageIdx, deck1, deck2):
     return _deck_strength(ageIdx, deck1, deck2) - _deck_strength(ageIdx, deck2, deck1)
+
+
+def simple_deck_strength(deck):
+    return _deck_strength(0, deck, []) + _deck_strength(1, deck, []) + _deck_strength(2, deck, [])
 
 
 def match(deck1, deck2, verbose=False):
@@ -46,7 +49,7 @@ def deck_summary_old(deck):
 
 
 def age_count(age, deck):
-    return reduce(lambda acc, card: acc + (card.age == age), deck, 0)
+    return sum([card.age == age for card in deck])
 
 
 def deck_summary(deck):

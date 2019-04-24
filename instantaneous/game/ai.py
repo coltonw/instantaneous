@@ -2,7 +2,8 @@ import collections
 from enum import Flag, auto
 from random import choices, randrange, sample, shuffle
 from .card import Age, Mod, Profession, Race, EASY_PROF_SYNERGY_THRESHOLD, EASY_RACE_SYNERGY_THRESHOLD, HARD_PROF_SYNERGY_THRESHOLD, HARD_RACE_SYNERGY_THRESHOLD
-from .match import DECK_SIZE
+from .match import DECK_SIZE, simple_deck_strength
+from .montecarlo import mcts
 
 
 class Breakdown(Flag):
@@ -61,7 +62,7 @@ def finish_deck(basePool, deckMap):
         if len(deckMap) >= DECK_SIZE:
             break
         deckMap[card.cardId] = card
-    return list(deckMap.values())[0:20]
+    return list(deckMap.values())[0:DECK_SIZE]
 
 
 def _add_card(card, deckMap, ageCounts):
@@ -324,3 +325,51 @@ def random_good_strategy(basePool):
     shuffle(strats)
     strats = strats + [fill_strat(randrange(4, 10)), easy_synergy_strat()]
     return build_deck(basePool, strats)
+
+
+class DeckBuildingState():
+    def __init__(self, basePool=None, poolMap=None, deckMap=None, poolOptions=None):
+        if poolMap is not None:
+            self.poolMap = poolMap
+        elif basePool is not None:
+            self.poolMap = {c.cardId: c for c in basePool}
+        else:
+            raise ValueError('Must have basePool or poolMap')
+
+        if deckMap is not None:
+            self.deckMap = deckMap
+        else:
+            self.deckMap = {}
+
+        if poolOptions is not None:
+            self.poolOptions = poolOptions
+        else:
+            self.poolOptions = set(self.poolMap.keys())
+
+    def getPossibleActions(self):
+        return tuple(self.poolOptions)
+
+    def takeAction(self, action):
+        newDeck = dict(self.deckMap)
+        newDeck[action] = self.poolMap[action]
+        newPoolOptions = self.poolOptions.copy()
+        newPoolOptions.remove(action)
+        return DeckBuildingState(poolMap=self.poolMap, deckMap=newDeck, poolOptions=newPoolOptions)
+
+    def isTerminal(self):
+        return len(self.deckMap) == DECK_SIZE
+
+    def getReward(self):
+        # only needed for terminal states
+        return simple_deck_strength(self.deckMap.values())
+
+    def __eq__(self, other):
+        return set(self.deckMap.keys()) == set(other.deckMap.keys())
+
+
+def monte_carlo_deck(basePool, iterationLimit=None, timeLimit=None):
+    if iterationLimit is None and timeLimit is None:
+        iterationLimit = 1000
+    treeSearch = mcts(iterationLimit=iterationLimit, timeLimit=timeLimit)
+    terminalState = treeSearch.search_terminal_state(DeckBuildingState(basePool=basePool))
+    return list(terminalState.deckMap.values())

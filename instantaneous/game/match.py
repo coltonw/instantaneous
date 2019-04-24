@@ -20,6 +20,11 @@ def simple_deck_strength(deck):
     return _deck_strength(0, deck, []) * 2 + _deck_strength(1, deck, []) + _deck_strength(2, deck, [])
 
 
+# TODO: Implement phases:
+# Phase 0: "Before card effects" - Card generation and self-destruction
+# Phase 1: Normal card effects - Typically synergies and counters based on deck composition
+# Phase 2: "After card effects" - Synergies and counters based on strength
+# Phase 3: "If winning/losing the age" Synergies based on result
 def match(deck1, deck2, verbose=False):
     stoneResult = _age(0, deck1, deck2)
     stoneBonus = stoneResult

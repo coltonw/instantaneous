@@ -57,6 +57,13 @@ class Profession(Enum):
             return cardpool_pb2.Card.PEASANT
 
 
+class Phase(Enum):
+    BEFORE = auto()
+    EFFECT = auto()
+    AFTER = auto()
+    RESULT = auto()
+
+
 class Mod(Enum):
     NORMAL = auto()
     DELETE = auto()
@@ -67,6 +74,7 @@ class Mod(Enum):
     HARD_MATCHING_SYNERGY = auto()
     HARD_NONMATCHING_SYNERGY = auto()
     COUNTER = auto()
+    TRIGGER = auto()
     SPECIAL = auto()
 
 
@@ -337,3 +345,72 @@ def pool_to_proto(pool, id='0'):
     protoCards = map(lambda card: card.to_proto(), pool)
     protoPool.cards.extend(protoCards)
     return protoPool
+
+
+def combine_trigger_result(card, trigger, result):
+    card.mod = Mod.TRIGGER
+    card.strength = result.starting_str(card)
+
+    if result.calc_strength is not None:
+        def calc_trigger_strength(self, ageIdx, deck, oppDeck):
+            if trigger.check(self, ageIdx, deck, oppDeck):
+                return result.calc_strength(self, ageIdx, deck, oppDeck)
+            return self.strength[ageIdx]
+        card.calc = calc_trigger_strength
+    card.desc = f'If {trigger.desc}, {result.desc}'
+
+
+# Trigger
+# difficulty 0 = easy, 1 = medium, 2 = hard
+# complexity 0 = simple, 1 = sorta simple, 2 = complex
+class Trigger:
+    def __init__(self, desc, check, difficulty=1, complexity=1, phases=list(Phase)):
+        self.desc = desc
+        self.check = check
+        self.difficulty = difficulty
+        self.complexity = complexity
+        self.phases = phases
+
+    def __repr__(self):
+        return f'Trigger({self.desc},{self.difficulty},{self.complexity},{self.phases})'
+
+    def __str__(self):
+        return repr(self)
+
+
+# Result
+# power 0 = weak, 1 = medium, 2 = strong
+# complexity 0 = simple, 1 = sorta simple, 2 = complex
+class Result:
+    def __init__(self, desc, calc_strength=None, modify_deck=None, power=1, complexity=1, phases=list(Phase)):
+        self.desc = desc
+        self.calc_strength = calc_strength
+        self.modify_deck = modify_deck
+        self.power = power
+        self.complexity = complexity
+        self.phases = phases
+
+    def __repr__(self):
+        return f'Trigger({self.desc},{self.difficulty},{self.complexity},{self.phases})'
+
+    def __str__(self):
+        return repr(self)
+
+
+def generate_easy_synergy_trigger(card):
+    choices = set([])
+    threshold = 0
+    if random() > 0.5:
+        card.mod = Mod.EASY_MATCHING_SYNERGY
+        choices = set([card.race, card.prof])
+    else:
+        card.mod = Mod.EASY_NONMATCHING_SYNERGY
+        choices = set(Race) | set(USEFUL_PROFS) - set([card.race, card.prof])
+        threshold = -1
+    synergy = choice(list(choices))
+    threshold += EASY_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else EASY_PROF_SYNERGY_THRESHOLD
+
+    def check(self, ageIdx, deck, oppDeck):
+        return synergy_count(deck, synergy) >= threshold
+
+    return Trigger(f"you have at least {threshold} {synergy.name.capitalize()}s", check)

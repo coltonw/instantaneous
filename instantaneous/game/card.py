@@ -165,73 +165,6 @@ def synergy_count(deck, synergy):
     return sum(c.prof == synergy or c.race == synergy for c in deck)
 
 
-def generate_easy_synergy(card, matching):
-    choices = set([])
-    threshold = 0
-    if matching:
-        card.mod = Mod.EASY_MATCHING_SYNERGY
-        choices = set([card.race, card.prof])
-    else:
-        card.mod = Mod.EASY_NONMATCHING_SYNERGY
-        choices = set(Race) | set(USEFUL_PROFS) - set([card.race, card.prof])
-        threshold = -1
-    synergy = random.choice(list(choices))
-    threshold += EASY_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else EASY_PROF_SYNERGY_THRESHOLD
-
-    def calc_synergy_strength(self, ageIdx, deck, oppDeck):
-        if self.strength[ageIdx] == 0:
-            return 0
-        if synergy_count(deck, synergy) >= threshold:
-            return self.strength[ageIdx] + self.age.value
-        return self.strength[ageIdx]
-    card.calc = calc_synergy_strength
-    card.synergy = synergy
-    card.desc = f'If you have {threshold} or more {synergy.name.lower().capitalize()}, gain {card.age.value} strength'
-
-
-def generate_hard_synergy(card, matching):
-    card.strength = _weaken(card.strength)
-    choices = set([])
-    threshold = 0
-    if matching:
-        card.mod = Mod.HARD_MATCHING_SYNERGY
-        choices = set([card.race, card.prof])
-    else:
-        card.mod = Mod.HARD_NONMATCHING_SYNERGY
-        choices = set(Race) | set(USEFUL_PROFS) - set([card.race, card.prof])
-        threshold = -1
-    synergy = random.choice(list(choices))
-    threshold += HARD_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else HARD_PROF_SYNERGY_THRESHOLD
-
-    def calc_synergy_strength(self, ageIdx, deck, oppDeck):
-        if self.strength[ageIdx] == 0:
-            return 0
-        if synergy_count(deck, synergy) >= threshold:
-            return self.strength[ageIdx] + 1 + ceil(self.age.value * 1.5)
-        return self.strength[ageIdx]
-    card.calc = calc_synergy_strength
-    card.synergy = synergy
-    card.desc = f'{threshold}+ {synergy.name.lower().capitalize()} for +{1 + ceil(card.age.value * 1.5)}str'
-
-
-# how do counters work? Are they unbounded? Are they based on counts?
-def generate_counter(card):
-    card.mod = Mod.COUNTER
-    card.strength = _weaken(card.strength)
-    counter = random.choice(list(Race) + USEFUL_PROFS)
-    threshold = RACE_COUNTER_THRESHOLD if isinstance(counter, Race) else PROF_COUNTER_THRESHOLD
-
-    def calc_synergy_strength(self, ageIdx, deck, oppDeck):
-        if self.strength[ageIdx] == 0:
-            return 0
-        if synergy_count(oppDeck, counter) >= threshold:
-            return self.strength[ageIdx] + 1 + ceil(self.age.value * 1.5)
-        return self.strength[ageIdx]
-    card.calc = calc_synergy_strength
-    card.synergy = counter
-    card.desc = f'facing {threshold}+ {counter.name.lower().capitalize()} for +{1 + ceil(card.age.value * 1.5)}str'
-
-
 cardModOddsTable = {
     Profession.ALCHEMIST: {
         Mod.DELETE: .1,
@@ -308,7 +241,7 @@ def modify_card(card, mod):
         generate_trigger_result(card, difficulty=2)
     elif mod == Mod.COUNTER:
         # counter
-        generate_counter(card)
+        generate_trigger_result(card, difficulty=2)
     else:
         card.mod = mod
 
@@ -468,9 +401,22 @@ def hydrate_hard_synergy_trigger(card):
     return Trigger(f"you have at least {threshold} {synergy.name.capitalize()}s", check)
 
 
+# how do counters work? Are they unbounded? Are they based on counts?
+def hydrate_counter_trigger(card):
+    card.mod = Mod.COUNTER
+    counter = random.choice(list(Race) + USEFUL_PROFS)
+    threshold = RACE_COUNTER_THRESHOLD if isinstance(counter, Race) else PROF_COUNTER_THRESHOLD
+    card.synergy = counter
+
+    def check(self, ageIdx, deck, oppDeck):
+        return synergy_count(oppDeck, counter) >= threshold
+    return Trigger(f"your opponent has at least {threshold} {counter.name.capitalize()}s", check)
+
+
 triggerTypes = [
     TriggerType("easy_synergy", hydrate_easy_synergy_trigger),
-    TriggerType("hard_synergy", hydrate_hard_synergy_trigger, difficulty=2)
+    TriggerType("hard_synergy", hydrate_hard_synergy_trigger, difficulty=2),
+    TriggerType("counter", hydrate_counter_trigger, difficulty=2)
 ]
 
 

@@ -1,6 +1,7 @@
 from enum import Enum, auto
 from math import ceil
-from random import random, choice
+import random
+import sys
 from functools import reduce
 
 from instantaneous.proto import cardpool_pb2
@@ -174,7 +175,7 @@ def generate_easy_synergy(card, matching):
         card.mod = Mod.EASY_NONMATCHING_SYNERGY
         choices = set(Race) | set(USEFUL_PROFS) - set([card.race, card.prof])
         threshold = -1
-    synergy = choice(list(choices))
+    synergy = random.choice(list(choices))
     threshold += EASY_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else EASY_PROF_SYNERGY_THRESHOLD
 
     def calc_synergy_strength(self, ageIdx, deck, oppDeck):
@@ -185,7 +186,7 @@ def generate_easy_synergy(card, matching):
         return self.strength[ageIdx]
     card.calc = calc_synergy_strength
     card.synergy = synergy
-    card.desc = f'If you have {threshold} or more {synergy.name.lower().capitalize()}, for +{card.age.value} strength'
+    card.desc = f'If you have {threshold} or more {synergy.name.lower().capitalize()}, gain {card.age.value} strength'
 
 
 def generate_hard_synergy(card, matching):
@@ -199,7 +200,7 @@ def generate_hard_synergy(card, matching):
         card.mod = Mod.HARD_NONMATCHING_SYNERGY
         choices = set(Race) | set(USEFUL_PROFS) - set([card.race, card.prof])
         threshold = -1
-    synergy = choice(list(choices))
+    synergy = random.choice(list(choices))
     threshold += HARD_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else HARD_PROF_SYNERGY_THRESHOLD
 
     def calc_synergy_strength(self, ageIdx, deck, oppDeck):
@@ -217,7 +218,7 @@ def generate_hard_synergy(card, matching):
 def generate_counter(card):
     card.mod = Mod.COUNTER
     card.strength = _weaken(card.strength)
-    counter = choice(list(Race) + USEFUL_PROFS)
+    counter = random.choice(list(Race) + USEFUL_PROFS)
     threshold = RACE_COUNTER_THRESHOLD if isinstance(counter, Race) else PROF_COUNTER_THRESHOLD
 
     def calc_synergy_strength(self, ageIdx, deck, oppDeck):
@@ -299,18 +300,12 @@ def modify_card(card, mod):
         card.mod = Mod.WEAK
         card.strength = _weaken(card.strength)
         card.desc = 'weak'
-    elif mod == Mod.EASY_MATCHING_SYNERGY:
+    elif mod == Mod.EASY_MATCHING_SYNERGY or mod == Mod.EASY_NONMATCHING_SYNERGY:
         # easy matching synergy
-        generate_easy_synergy(card, True)
-    elif mod == Mod.EASY_NONMATCHING_SYNERGY:
-        # easy non-matching synergy
-        generate_easy_synergy(card, False)
-    elif mod == Mod.HARD_MATCHING_SYNERGY:
+        generate_trigger_result(card, difficulty=1)
+    elif mod == Mod.HARD_MATCHING_SYNERGY or mod == Mod.HARD_NONMATCHING_SYNERGY:
         # hard matching synergy
-        generate_hard_synergy(card, True)
-    elif mod == Mod.HARD_NONMATCHING_SYNERGY:
-        # hard non-matching synergy
-        generate_hard_synergy(card, False)
+        generate_trigger_result(card, difficulty=2)
     elif mod == Mod.COUNTER:
         # counter
         generate_counter(card)
@@ -320,15 +315,15 @@ def modify_card(card, mod):
 
 def add_special_cards(pool):
     # TODO: Add a bunch more special cards and add rules for how they get added to the pool
-    pool.append(Card([1, 3, 6], None, choice(list(Race)), choice(USEFUL_PROFS), desc='stair', mod=Mod.SPECIAL))
-    # pool.append(Card([8, 0, 0], None, choice(list(Race)), choice(USEFUL_PROFS), desc='stone-ly', mod=Mod.SPECIAL))\
+    pool.append(Card([1, 3, 6], None, random.choice(list(Race)), random.choice(USEFUL_PROFS), desc='stair', mod=Mod.SPECIAL))
+    # pool.append(Card([8, 0, 0], None, random.choice(list(Race)), random.choice(USEFUL_PROFS), desc='stone-ly', mod=Mod.SPECIAL))\
     return pool
 
 
 def generate_pool():
     pool = generate_basic_pool()
     for card in pool:
-        r = random()
+        r = random.random()
         currentOdds = 0
         for mod, odds in cardModOddsTable[card.prof].items():
             currentOdds += odds
@@ -347,9 +342,75 @@ def pool_to_proto(pool, id='0'):
     return protoPool
 
 
+class Trigger:
+    def __init__(self, desc, check):
+        self.desc = desc
+        self.check = check
+
+    def __repr__(self):
+        return f'Trigger({self.desc})'
+
+    def __str__(self):
+        return repr(self)
+
+
+class Result:
+    def __init__(self, desc, calc_strength=None, modify_deck=None, starting_str=None):
+        self.desc = desc
+        self.calc_strength = calc_strength
+        self.modify_deck = modify_deck
+        self.starting_str = starting_str
+
+    def __repr__(self):
+        return f'Result({self.desc})'
+
+    def __str__(self):
+        return repr(self)
+
+
+# TriggerType
+# difficulty 0 = easy, 1 = medium, 2 = hard
+# complexity 0 = simple, 1 = sorta simple, 2 = complex
+# hydrate should generate a Trigger which is always the same given the same card.triggerSeed
+class TriggerType:
+    def __init__(self, name, hydrate, difficulty=1, complexity=1, phases=list(Phase)):
+        self.name = name
+        self.hydrate = hydrate
+        self.difficulty = difficulty
+        self.complexity = complexity
+        self.phases = phases
+
+    def __repr__(self):
+        return f'TriggerType({self.name},{self.difficulty},{self.complexity},{self.phases})'
+
+    def __str__(self):
+        return repr(self)
+
+
+# ResultType
+# power 0 = weak, 1 = medium, 2 = strong
+# complexity 0 = simple, 1 = sorta simple, 2 = complex
+# hydrate should generate a Result which is always the same given the same card.resultSeed
+class ResultType:
+    def __init__(self, name, hydrate, power=1, complexity=1, phases=list(Phase)):
+        self.name = name
+        self.hydrate = hydrate
+        self.power = power
+        self.complexity = complexity
+        self.phases = phases
+
+    def __repr__(self):
+        return f'ResultType({self.name},{self.power},{self.complexity},{self.phases})'
+
+    def __str__(self):
+        return repr(self)
+
+
 def combine_trigger_result(card, trigger, result):
-    card.mod = Mod.TRIGGER
-    card.strength = result.starting_str(card)
+    if card.mod is Mod.NORMAL:
+        card.mod = Mod.TRIGGER
+    if result.starting_str is not None:
+        card.strength = result.starting_str(card)
 
     if result.calc_strength is not None:
         def calc_trigger_strength(self, ageIdx, deck, oppDeck):
@@ -360,57 +421,109 @@ def combine_trigger_result(card, trigger, result):
     card.desc = f'If {trigger.desc}, {result.desc}'
 
 
-# Trigger
-# difficulty 0 = easy, 1 = medium, 2 = hard
-# complexity 0 = simple, 1 = sorta simple, 2 = complex
-class Trigger:
-    def __init__(self, desc, check, difficulty=1, complexity=1, phases=list(Phase)):
-        self.desc = desc
-        self.check = check
-        self.difficulty = difficulty
-        self.complexity = complexity
-        self.phases = phases
-
-    def __repr__(self):
-        return f'Trigger({self.desc},{self.difficulty},{self.complexity},{self.phases})'
-
-    def __str__(self):
-        return repr(self)
+############
+# TRIGGERS #
+############
 
 
-# Result
-# power 0 = weak, 1 = medium, 2 = strong
-# complexity 0 = simple, 1 = sorta simple, 2 = complex
-class Result:
-    def __init__(self, desc, calc_strength=None, modify_deck=None, power=1, complexity=1, phases=list(Phase)):
-        self.desc = desc
-        self.calc_strength = calc_strength
-        self.modify_deck = modify_deck
-        self.power = power
-        self.complexity = complexity
-        self.phases = phases
-
-    def __repr__(self):
-        return f'Trigger({self.desc},{self.difficulty},{self.complexity},{self.phases})'
-
-    def __str__(self):
-        return repr(self)
-
-
-def generate_easy_synergy_trigger(card):
+def hydrate_easy_synergy_trigger(card):
+    rand = random.Random(card.triggerSeed)
     choices = set([])
     threshold = 0
-    if random() > 0.5:
+    if rand.random() < 0.66:
         card.mod = Mod.EASY_MATCHING_SYNERGY
         choices = set([card.race, card.prof])
     else:
         card.mod = Mod.EASY_NONMATCHING_SYNERGY
         choices = set(Race) | set(USEFUL_PROFS) - set([card.race, card.prof])
         threshold = -1
-    synergy = choice(list(choices))
+    synergy = rand.choice(list(choices))
     threshold += EASY_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else EASY_PROF_SYNERGY_THRESHOLD
+    card.synergy = synergy
 
     def check(self, ageIdx, deck, oppDeck):
         return synergy_count(deck, synergy) >= threshold
 
     return Trigger(f"you have at least {threshold} {synergy.name.capitalize()}s", check)
+
+
+def hydrate_hard_synergy_trigger(card):
+    rand = random.Random(card.triggerSeed)
+    choices = set([])
+    threshold = 0
+    if rand.random() < 0.75:
+        card.mod = Mod.HARD_MATCHING_SYNERGY
+        choices = set([card.race, card.prof])
+    else:
+        card.mod = Mod.HARD_NONMATCHING_SYNERGY
+        choices = set(Race) | set(USEFUL_PROFS) - set([card.race, card.prof])
+        threshold = -1
+    synergy = rand.choice(list(choices))
+    threshold += HARD_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else HARD_PROF_SYNERGY_THRESHOLD
+    card.synergy = synergy
+
+    def check(self, ageIdx, deck, oppDeck):
+        return synergy_count(deck, synergy) >= threshold
+
+    return Trigger(f"you have at least {threshold} {synergy.name.capitalize()}s", check)
+
+
+triggerTypes = [
+    TriggerType("easy_synergy", hydrate_easy_synergy_trigger),
+    TriggerType("hard_synergy", hydrate_hard_synergy_trigger, difficulty=2)
+]
+
+
+###########
+# RESULTS #
+###########
+
+
+def hydrate_strong_result(card):
+    # not needed here but sometimes is needed
+    # rand = random.Random(card.resultSeed)
+
+    def calc_strength(self, ageIdx, deck, oppDeck):
+        if self.strength[ageIdx] == 0:
+            return 0
+        return self.strength[ageIdx] + self.age.value
+
+    return Result(f"gain {card.age.value} strength", calc_strength=calc_strength)
+
+
+def hydrate_ultrastrong_lowstart_result(card):
+    # not needed here but sometimes is needed
+    # rand = random.Random(card.resultSeed)
+
+    def starting_str(c):
+        return _weaken(c.strength)
+
+    def calc_strength(self, ageIdx, deck, oppDeck):
+        if self.strength[ageIdx] == 0:
+            return 0
+        return self.strength[ageIdx] + 1 + ceil(self.age.value * 1.5)
+
+    return Result(f"gain {1 + ceil(card.age.value * 1.5)} strength", calc_strength=calc_strength, starting_str=starting_str)
+
+
+resultTypes = [
+    ResultType("strong", hydrate_strong_result, complexity=0),
+    ResultType("ultrastrong_lowstart", hydrate_ultrastrong_lowstart_result, power=2)
+]
+
+
+def generate_trigger_result(card, difficulty=None):
+    filteredTriggerTypes = triggerTypes
+    if difficulty is not None:
+        filteredTriggerTypes = list(filter(lambda tt: tt.difficulty == difficulty, triggerTypes))
+    triggerType = random.choice(filteredTriggerTypes)
+    # TODO: make this wiggle occasionally
+    filteredResultTypes = list(filter(lambda rt: rt.power == triggerType.difficulty, resultTypes))
+    resultType = random.choice(filteredResultTypes)
+
+    card.triggerSeed = random.randrange(sys.maxsize)
+    trigger = triggerType.hydrate(card)
+
+    card.resultSeed = random.randrange(sys.maxsize)
+    result = resultType.hydrate(card)
+    combine_trigger_result(card, trigger, result)

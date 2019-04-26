@@ -2,6 +2,7 @@ from enum import Enum, auto
 from math import ceil
 import random
 import sys
+import copy
 from functools import reduce
 
 from instantaneous.proto import cardpool_pb2
@@ -104,8 +105,13 @@ CRYSTAL_SYNERGY_THRESHOLD = 12
 class Card:
     cardId = 1
 
-    def __init__(self, strength, age, race, prof, desc='', mod=Mod.NORMAL, synergy=None, calc=lambda self, ageIdx, d, o: self.strength[ageIdx]):
-        self.cardId = Card.cardId
+    def __init__(self, strength, age, race, prof, desc='', mod=Mod.NORMAL,
+                 synergy=None, effects=None, cardId=None):
+        if cardId is None:
+            self.cardId = Card.cardId
+            Card.cardId += 1
+        else:
+            self.cardId = cardId
         self.strength = strength
         self.age = age
         self.race = race
@@ -113,8 +119,10 @@ class Card:
         self.desc = desc
         self.mod = mod
         self.synergy = synergy
-        self.calc = calc
-        Card.cardId += 1
+        if effects is None:
+            self.effects = []
+        else:
+            self.effects = effects
 
     def __repr__(self):
         return f'Card({self.strength},{self.age},{self.race},{self.prof},{self.desc})'
@@ -122,8 +130,17 @@ class Card:
     def __str__(self):
         return repr(self)
 
-    def calc_strength(self, ageIdx, deck, oppDeck):
-        return self.calc(self, ageIdx, deck, oppDeck)
+    def __copy__(self):
+        return Card(strength=self.strength, age=self.age, race=self.race,
+                    prof=self.prof, desc=self.desc, mod=self.mod,
+                    synergy=self.synergy, effects=self.effects,
+                    cardId=self.cardId)
+
+    def __deepcopy__(self, memodict={}):
+        return Card(strength=copy.deepcopy(self.strength), age=self.age, race=self.race,
+                    prof=self.prof, desc=self.desc, mod=self.mod,
+                    synergy=self.synergy, effects=copy.deepcopy(self.effects),
+                    cardId=self.cardId)
 
     def to_proto(self):
         protoCard = cardpool_pb2.Card()
@@ -161,10 +178,6 @@ def generate_basic_pool():
 
 def _weaken(strength):
     return list(map(lambda stre: stre - 1 if stre > 0 else 0, strength))
-
-
-def synergy_count(deck, synergy):
-    return sum(c.prof == synergy or c.race == synergy for c in deck)
 
 
 cardModOddsTable = {
@@ -277,6 +290,21 @@ def pool_to_proto(pool, id='0'):
     return protoPool
 
 
+class Effect:
+    def __init__(self, check, apply, phase, interactive, cardId):
+        self.checkFn = check
+        self.applyFn = apply
+        self.phase = phase
+        self.interactive = interactive
+        self.cardId = cardId
+
+    def check(self, deckMetadata, oppDeckMetadata):
+        return self.checkFn(self, deckMetadata, oppDeckMetadata)
+
+    def apply(self, deckMetadata, oppDeckMetadata):
+        self.applyFn(self, deckMetadata, oppDeckMetadata)
+
+
 class Trigger:
     def __init__(self, desc, check):
         self.desc = desc
@@ -290,10 +318,9 @@ class Trigger:
 
 
 class Result:
-    def __init__(self, desc, calc_strength=None, modify_deck=None, starting_str=None):
+    def __init__(self, desc, apply=None, starting_str=None):
         self.desc = desc
-        self.calc_strength = calc_strength
-        self.modify_deck = modify_deck
+        self.apply = apply
         self.starting_str = starting_str
 
     def __repr__(self):
@@ -308,15 +335,16 @@ class Result:
 # complexity 0 = simple, 1 = sorta simple, 2 = complex
 # hydrate should generate a Trigger which is always the same given the same card.triggerSeed
 class TriggerType:
-    def __init__(self, name, hydrate, difficulty=1, complexity=1, phases=list(Phase)):
+    def __init__(self, name, hydrate, difficulty=1, complexity=1, phases=list(Phase), interactive=False):
         self.name = name
         self.hydrate = hydrate
         self.difficulty = difficulty
         self.complexity = complexity
         self.phases = phases
+        self.interactive = interactive
 
     def __repr__(self):
-        return f'TriggerType({self.name},{self.difficulty},{self.complexity},{self.phases})'
+        return f'TriggerType({self.name},{self.difficulty},{self.complexity},{self.phases},{self.interactive})'
 
     def __str__(self):
         return repr(self)
@@ -327,32 +355,30 @@ class TriggerType:
 # complexity 0 = simple, 1 = sorta simple, 2 = complex
 # hydrate should generate a Result which is always the same given the same card.resultSeed
 class ResultType:
-    def __init__(self, name, hydrate, power=1, complexity=1, phases=list(Phase)):
+    def __init__(self, name, hydrate, power=1, complexity=1, phases=list(Phase), interactive=False):
         self.name = name
         self.hydrate = hydrate
         self.power = power
         self.complexity = complexity
         self.phases = phases
+        self.interactive = interactive
 
     def __repr__(self):
-        return f'ResultType({self.name},{self.power},{self.complexity},{self.phases})'
+        return f'ResultType({self.name},{self.power},{self.complexity},{self.phases},{self.interactive})'
 
     def __str__(self):
         return repr(self)
 
 
-def combine_trigger_result(card, trigger, result):
+def combine_trigger_result(card, trigger, result, phase=Phase.EFFECT, interactive=False):
     if card.mod is Mod.NORMAL:
         card.mod = Mod.TRIGGER
     if result.starting_str is not None:
         card.strength = result.starting_str(card)
 
-    if result.calc_strength is not None:
-        def calc_trigger_strength(self, ageIdx, deck, oppDeck):
-            if trigger.check(self, ageIdx, deck, oppDeck):
-                return result.calc_strength(self, ageIdx, deck, oppDeck)
-            return self.strength[ageIdx]
-        card.calc = calc_trigger_strength
+    if result.apply is not None:
+        effect = Effect(check=trigger.check, apply=result.apply, phase=phase, interactive=interactive, cardId=card.cardId)
+        card.effects.append(effect)
     card.desc = f'If {trigger.desc}, {result.desc}'
 
 
@@ -376,8 +402,8 @@ def hydrate_easy_synergy_trigger(card):
     threshold += EASY_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else EASY_PROF_SYNERGY_THRESHOLD
     card.synergy = synergy
 
-    def check(self, ageIdx, deck, oppDeck):
-        return synergy_count(deck, synergy) >= threshold
+    def check(self, deck, oppDeck):
+        return deck['count'][synergy] >= threshold
 
     return Trigger(f"you have at least {threshold} {synergy.name.capitalize()}s", check)
 
@@ -397,93 +423,93 @@ def hydrate_hard_synergy_trigger(card):
     threshold += HARD_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else HARD_PROF_SYNERGY_THRESHOLD
     card.synergy = synergy
 
-    def check(self, ageIdx, deck, oppDeck):
-        return synergy_count(deck, synergy) >= threshold
+    def check(self, deck, oppDeck):
+        return deck['count'][synergy] >= threshold
 
     return Trigger(f"you have at least {threshold} {synergy.name.capitalize()}s", check)
 
 
 # how do counters work? Are they unbounded? Are they based on counts?
-def hydrate_counter_trigger(card):
-    rand = random.Random(card.triggerSeed)
-    card.mod = Mod.COUNTER
-    counter = rand.choice(list(Race) + USEFUL_PROFS)
-    threshold = RACE_COUNTER_THRESHOLD if isinstance(counter, Race) else PROF_COUNTER_THRESHOLD
-    card.synergy = counter
+# def hydrate_counter_trigger(card):
+#     rand = random.Random(card.triggerSeed)
+#     card.mod = Mod.COUNTER
+#     counter = rand.choice(list(Race) + USEFUL_PROFS)
+#     threshold = RACE_COUNTER_THRESHOLD if isinstance(counter, Race) else PROF_COUNTER_THRESHOLD
+#     card.synergy = counter
 
-    def check(self, ageIdx, deck, oppDeck):
-        return synergy_count(oppDeck, counter) >= threshold
-    return Trigger(f"your opponent has at least {threshold} {counter.name.capitalize()}s", check)
-
-
-def hydrate_crystal_synergy_trigger(card):
-    def check(self, ageIdx, deck, oppDeck):
-        numCrystal = sum([card.age is Age.CRYSTAL for card in deck])
-        return numCrystal >= CRYSTAL_SYNERGY_THRESHOLD
-    return Trigger(f"you have at least {CRYSTAL_SYNERGY_THRESHOLD} 0|0|X cards", check)
+#     def check(self, ageIdx, deck, oppDeck):
+#         return synergy_count(oppDeck, counter) >= threshold
+#     return Trigger(f"your opponent has at least {threshold} {counter.name.capitalize()}s", check)
 
 
-def hydrate_variety_trigger(card):
-    def check(self, ageIdx, deck, oppDeck):
-        numProfTypes = {card.prof for card in deck}
-        return numProfTypes == len(Profession)
-    return Trigger(f"you have every profession", check)
+# def hydrate_crystal_synergy_trigger(card):
+#     def check(self, ageIdx, deck, oppDeck):
+#         numCrystal = sum([card.age is Age.CRYSTAL for card in deck])
+#         return numCrystal >= CRYSTAL_SYNERGY_THRESHOLD
+#     return Trigger(f"you have at least {CRYSTAL_SYNERGY_THRESHOLD} 0|0|X cards", check)
 
 
-def hydrate_hard_variety_trigger(card):
-    def check(self, ageIdx, deck, oppDeck):
-        profCounts = {}
-        for c in deck:
-            if c.prof in profCounts:
-                profCounts[c.prof] = 1 + profCounts[c.prof]
-            else:
-                profCounts[c.prof] = 1
-        for p in Profession:
-            if p not in profCounts or profCounts[p] < 2:
-                return False
-        return True
-    return Trigger(f"you have at least 2 of every profession", check)
+# def hydrate_variety_trigger(card):
+#     def check(self, ageIdx, deck, oppDeck):
+#         numProfTypes = {card.prof for card in deck}
+#         return numProfTypes == len(Profession)
+#     return Trigger(f"you have every profession", check)
 
 
-def hydrate_diversity_trigger(card):
-    def check(self, ageIdx, deck, oppDeck):
-        raceCounts = {}
-        for c in deck:
-            if c.race in raceCounts:
-                raceCounts[c.race] = 1 + raceCounts[c.race]
-            else:
-                raceCounts[c.race] = 1
-        for r in Race:
-            if r not in raceCounts or raceCounts[r] < 2:
-                return False
-        return True
-    return Trigger(f"you have at least 2 of every race", check)
+# def hydrate_hard_variety_trigger(card):
+#     def check(self, ageIdx, deck, oppDeck):
+#         profCounts = {}
+#         for c in deck:
+#             if c.prof in profCounts:
+#                 profCounts[c.prof] = 1 + profCounts[c.prof]
+#             else:
+#                 profCounts[c.prof] = 1
+#         for p in Profession:
+#             if p not in profCounts or profCounts[p] < 2:
+#                 return False
+#         return True
+#     return Trigger(f"you have at least 2 of every profession", check)
 
 
-def hydrate_hard_diversity_trigger(card):
-    def check(self, ageIdx, deck, oppDeck):
-        raceCounts = {}
-        for c in deck:
-            if c.race in raceCounts:
-                raceCounts[c.race] = 1 + raceCounts[c.race]
-            else:
-                raceCounts[c.race] = 1
-        for r in Race:
-            if r not in raceCounts or raceCounts[r] < 4:
-                return False
-        return True
-    return Trigger(f"you have at least 4 of every race", check)
+# def hydrate_diversity_trigger(card):
+#     def check(self, ageIdx, deck, oppDeck):
+#         raceCounts = {}
+#         for c in deck:
+#             if c.race in raceCounts:
+#                 raceCounts[c.race] = 1 + raceCounts[c.race]
+#             else:
+#                 raceCounts[c.race] = 1
+#         for r in Race:
+#             if r not in raceCounts or raceCounts[r] < 2:
+#                 return False
+#         return True
+#     return Trigger(f"you have at least 2 of every race", check)
+
+
+# def hydrate_hard_diversity_trigger(card):
+#     def check(self, ageIdx, deck, oppDeck):
+#         raceCounts = {}
+#         for c in deck:
+#             if c.race in raceCounts:
+#                 raceCounts[c.race] = 1 + raceCounts[c.race]
+#             else:
+#                 raceCounts[c.race] = 1
+#         for r in Race:
+#             if r not in raceCounts or raceCounts[r] < 4:
+#                 return False
+#         return True
+#     return Trigger(f"you have at least 4 of every race", check)
 
 
 triggerTypes = [
     TriggerType("easy_synergy", hydrate_easy_synergy_trigger),
     TriggerType("hard_synergy", hydrate_hard_synergy_trigger, difficulty=2),
-    TriggerType("counter", hydrate_counter_trigger, difficulty=2),
-    TriggerType("crystal_synergy", hydrate_crystal_synergy_trigger, difficulty=2),
-    TriggerType("variety", hydrate_variety_trigger),
-    TriggerType("hard_variety", hydrate_hard_variety_trigger, difficulty=2),
-    TriggerType("diversity", hydrate_diversity_trigger),
-    TriggerType("hard_diversity", hydrate_hard_diversity_trigger)
+    # TriggerType("counter", hydrate_counter_trigger, difficulty=2),
+    # TriggerType("crystal_synergy", hydrate_crystal_synergy_trigger, difficulty=2),
+    # TriggerType("variety", hydrate_variety_trigger),
+    # TriggerType("hard_variety", hydrate_hard_variety_trigger, difficulty=2),
+    # TriggerType("diversity", hydrate_diversity_trigger),
+    # TriggerType("hard_diversity", hydrate_hard_diversity_trigger)
 ]
 
 
@@ -496,12 +522,13 @@ def hydrate_strong_result(card):
     # not needed here but sometimes is needed
     # rand = random.Random(card.resultSeed)
 
-    def calc_strength(self, ageIdx, deck, oppDeck):
-        if self.strength[ageIdx] == 0:
-            return 0
-        return self.strength[ageIdx] + self.age.value
+    def apply(self, deck, oppDeck):
+        for ageIdx in range(3):
+            if deck[self.cardId].strength[ageIdx] > 0:
+                deck[self.cardId].strength[ageIdx] += card.age.value
+                deck['total'][ageIdx] += card.age.value
 
-    return Result(f"gain {card.age.value} strength", calc_strength=calc_strength)
+    return Result(f"gain {card.age.value} strength", apply=apply)
 
 
 def hydrate_ultrastrong_lowstart_result(card):
@@ -511,12 +538,13 @@ def hydrate_ultrastrong_lowstart_result(card):
     def starting_str(c):
         return _weaken(c.strength)
 
-    def calc_strength(self, ageIdx, deck, oppDeck):
-        if self.strength[ageIdx] == 0:
-            return 0
-        return self.strength[ageIdx] + 1 + ceil(self.age.value * 1.5)
+    def apply(self, deck, oppDeck):
+        for ageIdx in range(3):
+            if deck[self.cardId].strength[ageIdx] > 0:
+                deck[self.cardId].strength[ageIdx] += 1 + ceil(card.age.value * 1.5)
+                deck['total'][ageIdx] += 1 + ceil(card.age.value * 1.5)
 
-    return Result(f"gain {1 + ceil(card.age.value * 1.5)} strength", calc_strength=calc_strength, starting_str=starting_str)
+    return Result(f"gain {1 + ceil(card.age.value * 1.5)} strength", apply=apply, starting_str=starting_str)
 
 
 resultTypes = [
@@ -539,4 +567,4 @@ def generate_trigger_result(card, difficulty=None):
 
     card.resultSeed = random.randrange(sys.maxsize)
     result = resultType.hydrate(card)
-    combine_trigger_result(card, trigger, result)
+    combine_trigger_result(card, trigger, result, interactive=triggerType.interactive or resultType.interactive)

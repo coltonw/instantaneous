@@ -2,7 +2,7 @@ import shutil
 from functools import reduce
 from textwrap import wrap
 from instantaneous.game.card import generate_pool, Mod, Race, USEFUL_PROFS
-from instantaneous.game.match import DECK_SIZE, match, deck_summary
+from instantaneous.game.match import DECK_SIZE, match, to_metadata
 from instantaneous.game import ai
 from instantaneous.proto import cardpool_pb2
 
@@ -204,11 +204,15 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None):
     for i in range(3):
         decks[f'rand{i}'] = ai.random_good_strategy(pool)
 
+    decks = {k: to_metadata(v) for k, v in decks.items()}
+
     # TODO: perf improvement. Does every match twice. Inefficient.
     for name1, deck1 in decks.items():
         wins[name1] = wins.get(name1, 0)
         if verbose:
-            print('{0}{1}'.format(name1, deck_summary(deck1)))
+            # TODO: fix this once I fix deck summary
+            # print('{0}{1}'.format(name1, deck_summary(deck1)))
+            print('{0}{1}'.format(name1, deck1['base']['total']))
         for name2, deck2 in decks.items():
             m = match(deck1, deck2)
             if m > 0:

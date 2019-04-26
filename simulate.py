@@ -1,6 +1,8 @@
 import sys
+import datetime
 from multiprocessing import Pool
 from instantaneous.game.play import simulate
+from instantaneous.game import match
 
 
 verbose = False
@@ -32,6 +34,7 @@ def combineHighestWins(highestWins, wins):
     return highestWins
 
 
+startTime = datetime.datetime.now()
 wins = {}
 highestWins = {}
 gamesPlayed = 0
@@ -44,11 +47,18 @@ except (IndexError, ValueError):
 if sims == 1:
     verbose = True
 pool = Pool()
+
 for simWins, simGamesPlayed in pool.imap_unordered(multiSim, range(sims)):
     wins = combineWins(wins, simWins)
     highestWins = combineHighestWins(highestWins, simWins)
     gamesPlayed += simGamesPlayed
 
+endTime = datetime.datetime.now()
+deltaTime = endTime - startTime
+print()
+print(f'Total matches: {len(wins) * gamesPlayed}')
+# ~6600 on commit 792114a8
+print(f'Matches / second: {len(wins) * gamesPlayed / deltaTime.total_seconds():.0f}')
 
 winPct = []
 for deckName, wins in wins.items():

@@ -197,14 +197,17 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None):
     ])
     decks['strong'] = ai.build_deck(pool, [])
     decks['specialStrong'] = ai.build_deck(pool, [ai.special_strat()])
-    # 4 seconds or 6000 rounds seems to be the right number for best results
-    # decks['monteCarlo'] = ai.monte_carlo_deck(pool, iterationLimit=6000)
-    # decks['monteCarlo'] = ai.monte_carlo_deck(pool, timeLimit=4000)
 
     for i in range(3):
         decks[f'rand{i}'] = ai.random_good_strategy(pool)
 
     decks = {k: to_metadata(v) for k, v in decks.items()}
+
+    # these ai return deckMetadata directly
+
+    # or 6000 rounds (around 8 seconds) seems to be the right number for best results
+    decks['monteCarlo'] = ai.monte_carlo_deck(pool, iterationLimit=6000)
+    # decks['monteCarlo'] = ai.monte_carlo_deck(pool, timeLimit=5000)
 
     # TODO: perf improvement. Does every match twice. Inefficient.
     for name1, deck1 in decks.items():

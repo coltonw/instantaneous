@@ -9,9 +9,10 @@ IRON_BONUS_THRESHOLD = 19
 DECK_SIZE = 20
 
 
-# TODO: apply effects. Monte Carlo is going to suck now sortof
 def simple_deck_strength(deckMetadata):
-    return deckMetadata['base']['total'][0] * 2 + deckMetadata['base']['total'][1] + deckMetadata['base']['total'][2]
+    if 'simple' not in deckMetadata:
+        simple_match(deckMetadata)
+    return deckMetadata['simple']['total'][0] * 2 + deckMetadata['simple']['total'][1] + deckMetadata['simple']['total'][2]
 
 
 # deckMetadata: {
@@ -50,6 +51,9 @@ for phase in Phase:
     _baseMetadata[phase] = {'effects': []}
 
 
+def base_metadata():
+    return copy.deepcopy(_baseMetadata)
+
 def simple_match(deckMetadata):
     fakeOpponent = copy.deepcopy(_baseMetadata)
     deckMetadata['cur'] = copy.deepcopy(deckMetadata['base'])
@@ -81,7 +85,7 @@ def add_card(deckMetadata, card):
 
 
 def to_metadata(deck):
-    deckMetadata = copy.deepcopy(_baseMetadata)
+    deckMetadata = base_metadata()
     deckMetadata['deck'] = deck
     for card in deck:
         add_card(deckMetadata, card)
@@ -123,7 +127,11 @@ def match(deckMetadata1, deckMetadata2, verbose=False):
         _phase(deckMetadata1, deckMetadata2, Phase.AFTER)
         _phase(deckMetadata1, deckMetadata2, Phase.RESULT)
     else:
+        if 'simple' not in deckMetadata1:
+            simple_match(deckMetadata1)
         deckMetadata1['cur']['total'] = deckMetadata1['simple']['total']
+        if 'simple' not in deckMetadata2:
+            simple_match(deckMetadata2)
         deckMetadata2['cur']['total'] = deckMetadata2['simple']['total']
 
     stoneResult = deckMetadata1['cur']['total'][0] - deckMetadata2['cur']['total'][0]

@@ -70,7 +70,7 @@ class mcts():
             while time.time() < timeLimit:
                 rounds += 1
                 self.executeRound()
-            # print(f'rounds taken: {rounds}, rounds/s: {rounds / self.timeLimit * 1000}')
+            print(f'rounds taken: {rounds}, rounds/s: {rounds / self.timeLimit * 1000}')
         else:
             for i in range(self.searchLimit):
                 self.executeRound()

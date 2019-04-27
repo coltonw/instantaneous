@@ -1,8 +1,9 @@
 import collections
 from enum import Flag, auto
 from random import choices, randrange, sample, shuffle
+import copy
 from .card import Age, Mod, Profession, Race, EASY_PROF_SYNERGY_THRESHOLD, EASY_RACE_SYNERGY_THRESHOLD, HARD_PROF_SYNERGY_THRESHOLD, HARD_RACE_SYNERGY_THRESHOLD
-from .match import DECK_SIZE, simple_deck_strength
+from .match import DECK_SIZE, simple_deck_strength, to_metadata
 from .montecarlo import mcts
 
 
@@ -328,7 +329,7 @@ def random_good_strategy(basePool):
 
 
 class DeckBuildingState():
-    def __init__(self, basePool=None, poolMap=None, deckMap=None, poolOptions=None):
+    def __init__(self, basePool=None, poolMap=None, poolOptions=None, cardIdSet=None):
         if poolMap is not None:
             self.poolMap = poolMap
         elif basePool is not None:
@@ -336,35 +337,37 @@ class DeckBuildingState():
         else:
             raise ValueError('Must have basePool or poolMap')
 
-        if deckMap is not None:
-            self.deckMap = deckMap
-        else:
-            self.deckMap = {}
-
         if poolOptions is not None:
             self.poolOptions = poolOptions
         else:
             self.poolOptions = set(self.poolMap.keys())
 
+        if cardIdSet is not None:
+            self.cardIdSet = cardIdSet
+        else:
+            self.cardIdSet = set()
+
     def getPossibleActions(self):
         return tuple(self.poolOptions)
 
     def takeAction(self, action):
-        newDeck = dict(self.deckMap)
-        newDeck[action] = self.poolMap[action]
-        newPoolOptions = self.poolOptions.copy()
-        newPoolOptions.remove(action)
-        return DeckBuildingState(poolMap=self.poolMap, deckMap=newDeck, poolOptions=newPoolOptions)
+        newCardIdSet = self.cardIdSet | {action}
+        newPoolOptions = self.poolOptions - {action}
+        return DeckBuildingState(poolMap=self.poolMap, poolOptions=newPoolOptions, cardIdSet=newCardIdSet)
 
     def isTerminal(self):
-        return len(self.deckMap) == DECK_SIZE
+        return len(self.cardIdSet) == DECK_SIZE
 
     def getReward(self):
         # only needed for terminal states
-        return simple_deck_strength(self.deckMap.values())
+        deck = []
+        for cardId in self.cardIdSet:
+            deck.append(self.poolMap[cardId])
+        self.deckMetadata = to_metadata(deck)
+        return simple_deck_strength(self.deckMetadata)
 
     def __eq__(self, other):
-        return set(self.deckMap.keys()) == set(other.deckMap.keys())
+        return self.cardIdSet == other.cardIdSet
 
 
 def monte_carlo_deck(basePool, iterationLimit=None, timeLimit=None):
@@ -372,4 +375,4 @@ def monte_carlo_deck(basePool, iterationLimit=None, timeLimit=None):
         iterationLimit = 1000
     treeSearch = mcts(iterationLimit=iterationLimit, timeLimit=timeLimit)
     terminalState = treeSearch.search_terminal_state(DeckBuildingState(basePool=basePool))
-    return list(terminalState.deckMap.values())
+    return terminalState.deckMetadata

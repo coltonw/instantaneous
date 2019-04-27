@@ -242,12 +242,12 @@ def modify_card(card, mod):
         # stronger card
         card.mod = Mod.STRONG
         card.strength = list(map(lambda str: str + card.age.value if str > 0 else 0, card.strength))
-        card.desc = 'strong'
+        card.desc = 'Strong'
     if mod == Mod.WEAK:
-        # stronger card
+        # weaker card
         card.mod = Mod.WEAK
         card.strength = _weaken(card.strength)
-        card.desc = 'weak'
+        card.desc = 'Weak'
     elif mod == Mod.EASY_MATCHING_SYNERGY or mod == Mod.EASY_NONMATCHING_SYNERGY:
         # easy matching synergy
         generate_trigger_result(card, difficulty=1)
@@ -335,7 +335,7 @@ class Result:
 # complexity 0 = simple, 1 = sorta simple, 2 = complex
 # hydrate should generate a Trigger which is always the same given the same card.triggerSeed
 class TriggerType:
-    def __init__(self, name, hydrate, difficulty=1, complexity=1, phases=list(Phase), interactive=False):
+    def __init__(self, name, hydrate, difficulty=1, complexity=1, phases=set(Phase), interactive=False):
         self.name = name
         self.hydrate = hydrate
         self.difficulty = difficulty
@@ -355,7 +355,7 @@ class TriggerType:
 # complexity 0 = simple, 1 = sorta simple, 2 = complex
 # hydrate should generate a Result which is always the same given the same card.resultSeed
 class ResultType:
-    def __init__(self, name, hydrate, power=1, complexity=1, phases=list(Phase), interactive=False):
+    def __init__(self, name, hydrate, power=1, complexity=1, phases=set(Phase), interactive=False):
         self.name = name
         self.hydrate = hydrate
         self.power = power
@@ -484,6 +484,18 @@ def hydrate_hard_diversity_trigger(card):
     return Trigger(f"you have at least 4 of every race", check)
 
 
+def hydrate_attacker_trigger(card):
+    def check(self, deck, oppDeck):
+        return deck['total'][0] > oppDeck['total'][0]
+    return Trigger(f"you are winning the first age", check)
+
+
+def hydrate_defender_trigger(card):
+    def check(self, deck, oppDeck):
+        return deck['total'][0] < oppDeck['total'][0]
+    return Trigger(f"you are losing the first age", check)
+
+
 triggerTypes = [
     TriggerType("easy_synergy", hydrate_easy_synergy_trigger),
     TriggerType("hard_synergy", hydrate_hard_synergy_trigger, difficulty=2),
@@ -492,7 +504,9 @@ triggerTypes = [
     TriggerType("variety", hydrate_variety_trigger),
     TriggerType("hard_variety", hydrate_hard_variety_trigger, difficulty=2),
     TriggerType("diversity", hydrate_diversity_trigger),
-    TriggerType("hard_diversity", hydrate_hard_diversity_trigger)
+    TriggerType("hard_diversity", hydrate_hard_diversity_trigger),
+    TriggerType("attacker", hydrate_attacker_trigger, phases={Phase.RESULT}, interactive=True),
+    TriggerType("defender", hydrate_defender_trigger, phases={Phase.RESULT}, interactive=True)
 ]
 
 
@@ -542,7 +556,7 @@ def generate_trigger_result(card, difficulty=None):
         filteredTriggerTypes = list(filter(lambda tt: tt.difficulty == difficulty, triggerTypes))
     triggerType = random.choice(filteredTriggerTypes)
     # TODO: make this wiggle occasionally
-    filteredResultTypes = list(filter(lambda rt: rt.power == triggerType.difficulty, resultTypes))
+    filteredResultTypes = list(filter(lambda rt: rt.power == triggerType.difficulty and len(rt.phases & triggerType.phases) > 0, resultTypes))
     resultType = random.choice(filteredResultTypes)
 
     card.triggerSeed = random.randrange(sys.maxsize)
@@ -550,4 +564,13 @@ def generate_trigger_result(card, difficulty=None):
 
     card.resultSeed = random.randrange(sys.maxsize)
     result = resultType.hydrate(card)
-    combine_trigger_result(card, trigger, result, interactive=triggerType.interactive or resultType.interactive)
+
+    possiblePhases = triggerType.phases & resultType.phases
+    phase = Phase.EFFECT
+    if Phase.EFFECT not in possiblePhases:
+        for p in Phase:
+            if p in possiblePhases:
+                phase = p
+                break
+
+    combine_trigger_result(card, trigger, result, phase=phase, interactive=triggerType.interactive or resultType.interactive)

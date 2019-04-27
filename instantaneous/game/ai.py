@@ -2,7 +2,7 @@ import collections
 from enum import Flag, auto
 from random import choices, randrange, sample, shuffle
 import copy
-from .card import Age, Mod, Profession, Race, EASY_PROF_SYNERGY_THRESHOLD, EASY_RACE_SYNERGY_THRESHOLD, HARD_PROF_SYNERGY_THRESHOLD, HARD_RACE_SYNERGY_THRESHOLD
+from .card import Age, Mod, Profession, Race, EASY_PROF_SYNERGY_THRESHOLD, EASY_RACE_SYNERGY_THRESHOLD, HARD_PROF_SYNERGY_THRESHOLD, HARD_RACE_SYNERGY_THRESHOLD, BASE_STRENGTH
 from .match import DECK_SIZE, simple_deck_strength, to_metadata
 from .montecarlo import mcts
 
@@ -22,13 +22,15 @@ def deck_sample(deck, samplePool, sampleSize=DECK_SIZE):
     return deck + result
 
 
+def is_weak(card):
+    return card.age is not None and card.strength[2] < BASE_STRENGTH[card.age][2]
+
+
 # this is an arbitrary card strength value used for sorting
 def _get_card_relative_strength(card):
     if card.mod == Mod.STRONG:
-        return 3
-    if card.mod == Mod.EASY_MATCHING_SYNERGY or card.mod == Mod.EASY_NONMATCHING_SYNERGY:
         return 2
-    elif card.mod == Mod.WEAK or card.mod == Mod.HARD_MATCHING_SYNERGY or card.mod == Mod.HARD_NONMATCHING_SYNERGY or card.mod == Mod.SPECIAL:
+    elif is_weak(card):
         return -1
     elif card.mod != Mod.NORMAL:
         return 1

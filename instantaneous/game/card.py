@@ -430,86 +430,69 @@ def hydrate_hard_synergy_trigger(card):
 
 
 # how do counters work? Are they unbounded? Are they based on counts?
-# def hydrate_counter_trigger(card):
-#     rand = random.Random(card.triggerSeed)
-#     card.mod = Mod.COUNTER
-#     counter = rand.choice(list(Race) + USEFUL_PROFS)
-#     threshold = RACE_COUNTER_THRESHOLD if isinstance(counter, Race) else PROF_COUNTER_THRESHOLD
-#     card.synergy = counter
+def hydrate_counter_trigger(card):
+    rand = random.Random(card.triggerSeed)
+    card.mod = Mod.COUNTER
+    counter = rand.choice(list(Race) + USEFUL_PROFS)
+    threshold = RACE_COUNTER_THRESHOLD if isinstance(counter, Race) else PROF_COUNTER_THRESHOLD
+    card.synergy = counter
 
-#     def check(self, ageIdx, deck, oppDeck):
-#         return synergy_count(oppDeck, counter) >= threshold
-#     return Trigger(f"your opponent has at least {threshold} {counter.name.capitalize()}s", check)
-
-
-# def hydrate_crystal_synergy_trigger(card):
-#     def check(self, ageIdx, deck, oppDeck):
-#         numCrystal = sum([card.age is Age.CRYSTAL for card in deck])
-#         return numCrystal >= CRYSTAL_SYNERGY_THRESHOLD
-#     return Trigger(f"you have at least {CRYSTAL_SYNERGY_THRESHOLD} 0|0|X cards", check)
+    def check(self, deck, oppDeck):
+        return oppDeck['count'][counter] >= threshold
+    return Trigger(f"your opponent has at least {threshold} {counter.name.capitalize()}s", check)
 
 
-# def hydrate_variety_trigger(card):
-#     def check(self, ageIdx, deck, oppDeck):
-#         numProfTypes = {card.prof for card in deck}
-#         return numProfTypes == len(Profession)
-#     return Trigger(f"you have every profession", check)
+def hydrate_crystal_synergy_trigger(card):
+    def check(self, deck, oppDeck):
+        return deck['count'][Age.CRYSTAL] >= CRYSTAL_SYNERGY_THRESHOLD
+    return Trigger(f"you have at least {CRYSTAL_SYNERGY_THRESHOLD} 0|0|X cards", check)
 
 
-# def hydrate_hard_variety_trigger(card):
-#     def check(self, ageIdx, deck, oppDeck):
-#         profCounts = {}
-#         for c in deck:
-#             if c.prof in profCounts:
-#                 profCounts[c.prof] = 1 + profCounts[c.prof]
-#             else:
-#                 profCounts[c.prof] = 1
-#         for p in Profession:
-#             if p not in profCounts or profCounts[p] < 2:
-#                 return False
-#         return True
-#     return Trigger(f"you have at least 2 of every profession", check)
+def hydrate_variety_trigger(card):
+    def check(self, deck, oppDeck):
+        for p in Profession:
+            if deck['count'][p] < 1:
+                return False
+        return True
+    return Trigger(f"you have every profession", check)
 
 
-# def hydrate_diversity_trigger(card):
-#     def check(self, ageIdx, deck, oppDeck):
-#         raceCounts = {}
-#         for c in deck:
-#             if c.race in raceCounts:
-#                 raceCounts[c.race] = 1 + raceCounts[c.race]
-#             else:
-#                 raceCounts[c.race] = 1
-#         for r in Race:
-#             if r not in raceCounts or raceCounts[r] < 2:
-#                 return False
-#         return True
-#     return Trigger(f"you have at least 2 of every race", check)
+def hydrate_hard_variety_trigger(card):
+    def check(self, deck, oppDeck):
+        for p in Profession:
+            if deck['count'][p] < 2:
+                return False
+        return True
+    return Trigger(f"you have at least 2 of every profession", check)
 
 
-# def hydrate_hard_diversity_trigger(card):
-#     def check(self, ageIdx, deck, oppDeck):
-#         raceCounts = {}
-#         for c in deck:
-#             if c.race in raceCounts:
-#                 raceCounts[c.race] = 1 + raceCounts[c.race]
-#             else:
-#                 raceCounts[c.race] = 1
-#         for r in Race:
-#             if r not in raceCounts or raceCounts[r] < 4:
-#                 return False
-#         return True
-#     return Trigger(f"you have at least 4 of every race", check)
+def hydrate_diversity_trigger(card):
+    def check(self, deck, oppDeck):
+        for r in Race:
+            if deck['count'][r] < 2:
+                return False
+        return True
+    return Trigger(f"you have at least 2 of every race", check)
+
+
+def hydrate_hard_diversity_trigger(card):
+    def check(self, deck, oppDeck):
+        for r in Race:
+            if deck['count'][r] < 4:
+                return False
+        return True
+    return Trigger(f"you have at least 4 of every race", check)
 
 
 triggerTypes = [
     TriggerType("easy_synergy", hydrate_easy_synergy_trigger),
     TriggerType("hard_synergy", hydrate_hard_synergy_trigger, difficulty=2),
-    # TriggerType("counter", hydrate_counter_trigger, difficulty=2),
-    # TriggerType("crystal_synergy", hydrate_crystal_synergy_trigger, difficulty=2),
-    # TriggerType("variety", hydrate_variety_trigger),
-    # TriggerType("hard_variety", hydrate_hard_variety_trigger, difficulty=2),
-    # TriggerType("diversity", hydrate_diversity_trigger),
-    # TriggerType("hard_diversity", hydrate_hard_diversity_trigger)
+    TriggerType("counter", hydrate_counter_trigger, difficulty=2, interactive=True),
+    TriggerType("crystal_synergy", hydrate_crystal_synergy_trigger, difficulty=2),
+    TriggerType("variety", hydrate_variety_trigger),
+    TriggerType("hard_variety", hydrate_hard_variety_trigger, difficulty=2),
+    TriggerType("diversity", hydrate_diversity_trigger),
+    TriggerType("hard_diversity", hydrate_hard_diversity_trigger)
 ]
 
 

@@ -205,23 +205,30 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None):
 
     # these ai return deckMetadata directly
 
+    # Monte Carlo is super slow compared to other ai so leave commented out unless running simulations
     # or 6000 rounds (around 8 seconds) seems to be the right number for best results
-    decks['monteCarlo'] = ai.monte_carlo_deck(pool, iterationLimit=6000)
-    # decks['monteCarlo'] = ai.monte_carlo_deck(pool, timeLimit=5000)
+    # decks['monteCarlo'] = ai.monte_carlo_deck(pool, iterationLimit=4000)
+    # decks['monteCarlo'] = ai.monte_carlo_deck(pool, timeLimit=8000)
 
-    # TODO: perf improvement. Does every match twice. Inefficient.
-    for name1, deck1 in decks.items():
+    deckKeys = list(decks.keys())
+    for i in range(len(deckKeys) - 1):
+        name1 = deckKeys[i]
+        deck1 = decks[name1]
         wins[name1] = wins.get(name1, 0)
         if verbose:
             # TODO: fix this once I fix deck summary
             # print('{0}{1}'.format(name1, deck_summary(deck1)))
             print('{0}{1}'.format(name1, deck1['base']['total']))
-        for name2, deck2 in decks.items():
+        for j in range(i + 1, len(deckKeys)):
+            name2 = deckKeys[j]
+            deck2 = decks[name2]
+            wins[name2] = wins.get(name2, 0)
             m = match(deck1, deck2)
             if m > 0:
                 wins[name1] = wins[name1] + 1
+            if m < 0:
+                wins[name2] = wins[name2] + 1
             if name1 == 'YOU':
                 print(f'{name1} vs {name2}: {m}')
-        # wins.append((name1, wins / (len(decks) - 1) * 100))
     gamesPlayed += len(decks) - 1
     return (wins, gamesPlayed)

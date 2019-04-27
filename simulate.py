@@ -56,9 +56,12 @@ for simWins, simGamesPlayed in pool.imap_unordered(multiSim, range(sims)):
 endTime = datetime.datetime.now()
 deltaTime = endTime - startTime
 print()
-print(f'Total matches: {len(wins) * gamesPlayed}')
+totalMatches = len(wins) * gamesPlayed / 2
+print(f'Total matches: {totalMatches}')
+print(f'Total wins: {sum(wins.values())}')
 # ~6600 on commit 792114a8
-print(f'Matches / second: {len(wins) * gamesPlayed / deltaTime.total_seconds():.0f}')
+# ~46000 on commit b38b26ae (new game engine plus caching)
+print(f'Matches / second: {totalMatches / deltaTime.total_seconds():.0f}')
 
 winPct = []
 for deckName, wins in wins.items():

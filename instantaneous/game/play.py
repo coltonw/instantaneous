@@ -1,7 +1,7 @@
 import shutil
 from functools import reduce
 from textwrap import wrap
-from instantaneous.game.card import generate_pool, Mod, Race, USEFUL_PROFS
+from instantaneous.game.card import generate_pool, Mod, Race, Phase, USEFUL_PROFS
 from instantaneous.game.match import DECK_SIZE, match, to_metadata
 from instantaneous.game import ai
 from instantaneous.proto import cardpool_pb2
@@ -99,7 +99,7 @@ def play(yourDeckProto, pool):
         for card in pool:
             if card.cardId == deckCardId:
                 yourDeck.append(card)
-    (wins, gamesPlayed) = simulate({}, 0, yourDeck=yourDeck, verbose=True, pool=pool)
+    (wins, gamesPlayed, _) = simulate({}, 0, yourDeck=yourDeck, verbose=True, pool=pool)
     result = cardpool_pb2.DeckResult()
     result.wins = wins['YOU']
     # right now, a tie is a loss
@@ -113,7 +113,6 @@ def play(yourDeckProto, pool):
     # double check this math
     result.percentile = (len(wins) - rank + 1) / len(wins)
     return result
-
 
 
 def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None):
@@ -201,14 +200,21 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None):
     for i in range(3):
         decks[f'rand{i}'] = ai.random_good_strategy(pool)
 
+    # convert ai decks to deckMetadata format
     decks = {k: to_metadata(v) for k, v in decks.items()}
 
     # these ai return deckMetadata directly
 
-    # Monte Carlo is super slow compared to other ai so leave commented out unless running simulations
+    # Monte Carlo is super slow compared to other ai so they are disabled unless running simulations
     # or 6000 rounds (around 8 seconds) seems to be the right number for best results
-    # decks['monteCarlo'] = ai.monte_carlo_deck(pool, iterationLimit=4000)
+    if 'YOU' not in decks:
+        decks['monteCarlo'] = ai.monte_carlo_deck(pool, iterationLimit=8000)
     # decks['monteCarlo'] = ai.monte_carlo_deck(pool, timeLimit=8000)
+    effects = {}
+    for p in Phase:
+        for effect in decks['monteCarlo'][p]['effects']:
+            effects[effect.name] = effects.get(effect.name, 0)
+            effects[effect.name] = effects[effect.name] + 1
 
     deckKeys = list(decks.keys())
     for i in range(len(deckKeys) - 1):
@@ -231,4 +237,4 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None):
             if name1 == 'YOU':
                 print(f'{name1} vs {name2}: {m}')
     gamesPlayed += len(decks) - 1
-    return (wins, gamesPlayed)
+    return (wins, gamesPlayed, effects)

@@ -54,15 +54,19 @@ for phase in Phase:
 def base_metadata():
     return copy.deepcopy(_baseMetadata)
 
+
 def simple_match(deckMetadata):
     fakeOpponent = copy.deepcopy(_baseMetadata)
     deckMetadata['cur'] = copy.deepcopy(deckMetadata['base'])
     fakeOpponent['cur'] = copy.deepcopy(fakeOpponent['base'])
 
+    # TODO: exclude interactive cards from simple matches
     _phase(deckMetadata, fakeOpponent, Phase.BEFORE)
     _phase(deckMetadata, fakeOpponent, Phase.EFFECT)
     _phase(deckMetadata, fakeOpponent, Phase.AFTER)
-    _phase(deckMetadata, fakeOpponent, Phase.RESULT)
+    # result is by definition interactive and therefore
+    # we exclude it from simple matches
+    # _phase(deckMetadata, fakeOpponent, Phase.RESULT)
     deckMetadata['simple'] = deckMetadata['cur']
     return deckMetadata['simple']
 

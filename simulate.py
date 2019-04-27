@@ -13,11 +13,11 @@ def multiSim(idx):
     return simulate({}, 0, verbose=verbose)
 
 
-def combineWins(wins1, wins2):
-    totalWins = wins1.copy()
-    for name, w in wins2.items():
-        totalWins[name] = totalWins.get(name, 0) + w
-    return totalWins
+def combineDictOfInts(d1, d2):
+    total = d1.copy()
+    for key, value in d2.items():
+        total[key] = total.get(key, 0) + value
+    return total
 
 
 def combineHighestWins(highestWins, wins):
@@ -37,6 +37,7 @@ def combineHighestWins(highestWins, wins):
 startTime = datetime.datetime.now()
 wins = {}
 highestWins = {}
+effects = {}
 gamesPlayed = 0
 sims = 10
 try:
@@ -48,16 +49,17 @@ if sims == 1:
     verbose = True
 pool = Pool()
 
-for simWins, simGamesPlayed in pool.imap_unordered(multiSim, range(sims)):
-    wins = combineWins(wins, simWins)
+for simWins, simGamesPlayed, simEffects in pool.imap_unordered(multiSim, range(sims)):
+    wins = combineDictOfInts(wins, simWins)
     highestWins = combineHighestWins(highestWins, simWins)
+    effects = combineDictOfInts(effects, simEffects)
     gamesPlayed += simGamesPlayed
 
 endTime = datetime.datetime.now()
 deltaTime = endTime - startTime
 print()
 totalMatches = len(wins) * gamesPlayed / 2
-print(f'Total matches: {totalMatches}')
+print(f'Total matches: {totalMatches:.0f}')
 print(f'Total wins: {sum(wins.values())}')
 # ~6600 on commit 792114a8
 # ~46000 on commit b38b26ae (new game engine plus caching)
@@ -73,9 +75,17 @@ for deckName, wins in highestWins.items():
     highestWinPct.append((deckName, wins / sims * 100))
 highestWinPct = sorted(highestWinPct, key=lambda t: t[1], reverse=True)
 
+effectPct = []
+for effectName, count in effects.items():
+    effectPct.append((effectName, count / sims))
+effectPct = sorted(effectPct, key=lambda t: t[1], reverse=True)
+
 print()
 for name, pct in winPct:
     print('{0} win%: {1:.0f}'.format(name, pct))
 print()
 for name, pct in highestWinPct:
     print('{0} best in pool %: {1:.1f}'.format(name, pct))
+print()
+for name, pct in effectPct:
+    print('{0} pick ratio: {1:.2f}'.format(name, pct))

@@ -185,51 +185,31 @@ cardModOddsTable = {
         Mod.DELETE: .1,
         Mod.WEAK: .1,
         Mod.STRONG: .1,
-        Mod.EASY_MATCHING_SYNERGY: .1,
-        Mod.EASY_NONMATCHING_SYNERGY: .05,
-        Mod.HARD_MATCHING_SYNERGY: .15,
-        Mod.HARD_NONMATCHING_SYNERGY: .05,
-        Mod.COUNTER: .1
+        Mod.TRIGGER: .5
     },
     Profession.BATTLETECH: {
         Mod.DELETE: .1,
         Mod.WEAK: .1,
         Mod.STRONG: .1,
-        Mod.EASY_MATCHING_SYNERGY: .1,
-        Mod.EASY_NONMATCHING_SYNERGY: .05,
-        Mod.HARD_MATCHING_SYNERGY: .15,
-        Mod.HARD_NONMATCHING_SYNERGY: .05,
-        Mod.COUNTER: .1
+        Mod.TRIGGER: .5
     },
     Profession.CONJUROR: {
         Mod.DELETE: .1,
         Mod.WEAK: .1,
         Mod.STRONG: .1,
-        Mod.EASY_MATCHING_SYNERGY: .1,
-        Mod.EASY_NONMATCHING_SYNERGY: .05,
-        Mod.HARD_MATCHING_SYNERGY: .15,
-        Mod.HARD_NONMATCHING_SYNERGY: .05,
-        Mod.COUNTER: .1
+        Mod.TRIGGER: .5
     },
     Profession.PROPHET: {
         Mod.DELETE: .1,
         Mod.WEAK: .1,
         Mod.STRONG: .1,
-        Mod.EASY_MATCHING_SYNERGY: .1,
-        Mod.EASY_NONMATCHING_SYNERGY: .05,
-        Mod.HARD_MATCHING_SYNERGY: .15,
-        Mod.HARD_NONMATCHING_SYNERGY: .05,
-        Mod.COUNTER: .1
+        Mod.TRIGGER: .5
     },
     Profession.WOODSMAN: {
         Mod.DELETE: .1,
         Mod.WEAK: .1,
         Mod.STRONG: .1,
-        Mod.EASY_MATCHING_SYNERGY: .1,
-        Mod.EASY_NONMATCHING_SYNERGY: .05,
-        Mod.HARD_MATCHING_SYNERGY: .15,
-        Mod.HARD_NONMATCHING_SYNERGY: .05,
-        Mod.COUNTER: .1
+        Mod.TRIGGER: .5
     },
     Profession.PEASANT: {
         Mod.WEAK: .2
@@ -248,15 +228,8 @@ def modify_card(card, mod):
         card.mod = Mod.WEAK
         card.strength = _weaken(card.strength)
         card.desc = 'Weak'
-    elif mod == Mod.EASY_MATCHING_SYNERGY or mod == Mod.EASY_NONMATCHING_SYNERGY:
-        # easy matching synergy
-        generate_trigger_result(card, difficulty=1)
-    elif mod == Mod.HARD_MATCHING_SYNERGY or mod == Mod.HARD_NONMATCHING_SYNERGY:
-        # hard matching synergy
-        generate_trigger_result(card, difficulty=2)
-    elif mod == Mod.COUNTER:
-        # counter
-        generate_trigger_result(card, difficulty=2)
+    elif mod == Mod.TRIGGER:
+        generate_trigger_result(card)
     else:
         card.mod = mod
 
@@ -291,12 +264,13 @@ def pool_to_proto(pool, id='0'):
 
 
 class Effect:
-    def __init__(self, check, apply, phase, interactive, cardId):
+    def __init__(self, check, apply, phase, interactive, cardId, name=''):
         self.checkFn = check
         self.applyFn = apply
         self.phase = phase
         self.interactive = interactive
         self.cardId = cardId
+        self.name = name
 
     def check(self, deckMetadata, oppDeckMetadata):
         return self.checkFn(self, deckMetadata, oppDeckMetadata)
@@ -370,14 +344,15 @@ class ResultType:
         return repr(self)
 
 
-def combine_trigger_result(card, trigger, result, phase=Phase.EFFECT, interactive=False):
+def combine_trigger_result(card, trigger, result, phase=Phase.EFFECT, interactive=False, name=''):
     if card.mod is Mod.NORMAL:
         card.mod = Mod.TRIGGER
     if result.starting_str is not None:
         card.strength = result.starting_str(card)
 
     if result.apply is not None:
-        effect = Effect(check=trigger.check, apply=result.apply, phase=phase, interactive=interactive, cardId=card.cardId)
+        effect = Effect(check=trigger.check, apply=result.apply, phase=phase,
+                        interactive=interactive, cardId=card.cardId, name=name)
         card.effects.append(effect)
     card.desc = f'If {trigger.desc}, {result.desc}'
 
@@ -429,7 +404,6 @@ def hydrate_hard_synergy_trigger(card):
     return Trigger(f"you have at least {threshold} {synergy.name.capitalize()}s", check)
 
 
-# how do counters work? Are they unbounded? Are they based on counts?
 def hydrate_counter_trigger(card):
     rand = random.Random(card.triggerSeed)
     card.mod = Mod.COUNTER
@@ -460,10 +434,10 @@ def hydrate_variety_trigger(card):
 def hydrate_hard_variety_trigger(card):
     def check(self, deck, oppDeck):
         for p in Profession:
-            if deck['count'][p] < 2:
+            if deck['count'][p] < 3:
                 return False
         return True
-    return Trigger(f"you have at least 2 of every profession", check)
+    return Trigger(f"you have at least 3 of every profession", check)
 
 
 def hydrate_diversity_trigger(card):
@@ -573,4 +547,6 @@ def generate_trigger_result(card, difficulty=None):
                 phase = p
                 break
 
-    combine_trigger_result(card, trigger, result, phase=phase, interactive=triggerType.interactive or resultType.interactive)
+    combine_trigger_result(card, trigger, result, phase=phase,
+                           interactive=triggerType.interactive or resultType.interactive,
+                           name=f'{triggerType.name}-{resultType.name}')

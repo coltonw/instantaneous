@@ -35,6 +35,13 @@ class Race(Enum):
         if self is Race.UNDEAD:
             return cardpool_pb2.Card.UNDEAD
 
+    def plural(self):
+        if self is Race.BEASTMAN:
+            return 'BEASTMEN'
+        elif self is Race.UNDEAD:
+            return self.name
+        return f"{self.name}S"
+
 
 class Profession(Enum):
     ALCHEMIST = auto()
@@ -57,6 +64,11 @@ class Profession(Enum):
             return cardpool_pb2.Card.WOODSMAN
         if self is Profession.PEASANT:
             return cardpool_pb2.Card.PEASANT
+
+    def plural(self):
+        if self is Profession.WOODSMAN:
+            return 'WOODSMEN'
+        return f"{self.name}S"
 
 
 class Phase(Enum):
@@ -380,7 +392,7 @@ def hydrate_easy_synergy_trigger(card):
     def check(self, deck, oppDeck):
         return deck['count'][synergy] >= threshold
 
-    return Trigger(f"you have at least {threshold} {synergy.name.capitalize()}s", check)
+    return Trigger(f"you have at least {threshold} {synergy.plural().capitalize()}", check)
 
 
 def hydrate_hard_synergy_trigger(card):
@@ -401,7 +413,7 @@ def hydrate_hard_synergy_trigger(card):
     def check(self, deck, oppDeck):
         return deck['count'][synergy] >= threshold
 
-    return Trigger(f"you have at least {threshold} {synergy.name.capitalize()}s", check)
+    return Trigger(f"you have at least {threshold} {synergy.plural().capitalize()}", check)
 
 
 def hydrate_counter_trigger(card):
@@ -413,7 +425,7 @@ def hydrate_counter_trigger(card):
 
     def check(self, deck, oppDeck):
         return oppDeck['count'][counter] >= threshold
-    return Trigger(f"your opponent has at least {threshold} {counter.name.capitalize()}s", check)
+    return Trigger(f"your opponent has at least {threshold} {counter.plural().capitalize()}", check)
 
 
 def hydrate_crystal_synergy_trigger(card):

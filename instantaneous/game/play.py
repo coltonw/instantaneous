@@ -205,16 +205,16 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None):
 
     # these ai return deckMetadata directly
 
+    effects = {}
     # Monte Carlo is super slow compared to other ai so they are disabled unless running simulations
     # or 6000 rounds (around 8 seconds) seems to be the right number for best results
     if 'YOU' not in decks:
         decks['monteCarlo'] = ai.monte_carlo_deck(pool, iterationLimit=8000)
-    # decks['monteCarlo'] = ai.monte_carlo_deck(pool, timeLimit=8000)
-    effects = {}
-    for p in Phase:
-        for effect in decks['monteCarlo'][p]['effects']:
-            effects[effect.name] = effects.get(effect.name, 0)
-            effects[effect.name] = effects[effect.name] + 1
+        # decks['monteCarlo'] = ai.monte_carlo_deck(pool, timeLimit=8000)
+        for p in Phase:
+            for effect in decks['monteCarlo'][p]['effects']:
+                effects[effect.name] = effects.get(effect.name, 0)
+                effects[effect.name] = effects[effect.name] + 1
 
     deckKeys = list(decks.keys())
     for i in range(len(deckKeys) - 1):

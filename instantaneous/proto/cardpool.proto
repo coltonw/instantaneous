@@ -3,6 +3,7 @@ syntax = "proto3";
 message CardPool {
     string id = 1;
     repeated Card cards = 2;
+    int32 deck_size = 3;
 }
 
 message Deck {

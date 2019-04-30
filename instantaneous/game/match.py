@@ -1,18 +1,12 @@
-from functools import reduce
 import copy
-from instantaneous.game.card import Age, Profession, Race, Mod, Phase
-
-# these are one less than 4 base strength cards.
-# This means you can win an age with 2 strong cards and 1 base strength card or with 1 really strong card and 2 base strength cards
-STONE_BONUS_THRESHOLD = 11
-IRON_BONUS_THRESHOLD = 19
-DECK_SIZE = 20
+from instantaneous.game.constants import Age, Profession, Race, Phase, STONE_BONUS_THRESHOLD, IRON_BONUS_THRESHOLD
 
 
 def simple_deck_strength(deckMetadata):
     if 'simple' not in deckMetadata:
         simple_match(deckMetadata)
-    return deckMetadata['simple']['total'][0] * 2 + deckMetadata['simple']['total'][1] + deckMetadata['simple']['total'][2]
+    return (deckMetadata['simple']['total'][0] * 2 + deckMetadata['simple']['total'][1] +
+            deckMetadata['simple']['total'][2])
 
 
 # deckMetadata: {

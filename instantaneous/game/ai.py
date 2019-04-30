@@ -1,9 +1,9 @@
 import collections
 from enum import Flag, auto
 from random import choices, randrange, sample, shuffle
-import copy
-from .card import Age, Mod, Profession, Race, EASY_PROF_SYNERGY_THRESHOLD, EASY_RACE_SYNERGY_THRESHOLD, HARD_PROF_SYNERGY_THRESHOLD, HARD_RACE_SYNERGY_THRESHOLD, BASE_STRENGTH
-from .match import DECK_SIZE, simple_deck_strength, to_metadata
+from .constants import (Age, Mod, Profession, Race, EASY_PROF_SYNERGY_THRESHOLD, EASY_RACE_SYNERGY_THRESHOLD,
+                        HARD_PROF_SYNERGY_THRESHOLD, HARD_RACE_SYNERGY_THRESHOLD, BASE_STRENGTH, DECK_SIZE)
+from .match import simple_deck_strength, to_metadata
 from .montecarlo import mcts
 
 

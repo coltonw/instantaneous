@@ -1,8 +1,9 @@
 import shutil
 from functools import reduce
 from textwrap import wrap
-from instantaneous.game.card import generate_pool, Mod, Race, Phase, USEFUL_PROFS
-from instantaneous.game.match import DECK_SIZE, match, to_metadata
+from instantaneous.game.constants import Mod, Race, Phase, USEFUL_PROFS, DECK_SIZE
+from instantaneous.game.card import generate_pool
+from instantaneous.game.match import match, to_metadata, simple_deck_strength
 from instantaneous.game import ai
 from instantaneous.proto import cardpool_pb2
 
@@ -123,7 +124,9 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None):
         # display_cards(pool)
         print(mod_breakdown(pool))
     decks = {}
-    if yourDeck and len(yourDeck) == DECK_SIZE:
+    if yourDeck is not None:
+        if len(yourDeck) != DECK_SIZE:
+            raise ValueError("Your deck is the wrong size")
         decks['YOU'] = yourDeck
         display_cards(decks['YOU'])
     decks['even'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.EVEN)])
@@ -203,28 +206,20 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None):
     # convert ai decks to deckMetadata format
     decks = {k: to_metadata(v) for k, v in decks.items()}
 
-    # these ai return deckMetadata directly
+    # the following ai return deckMetadata directly
 
-    effects = {}
     # Monte Carlo is super slow compared to other ai so they are disabled unless running simulations
     # or 6000 rounds (around 8 seconds) seems to be the right number for best results
     if 'YOU' not in decks:
-        decks['monteCarlo'] = ai.monte_carlo_deck(pool, iterationLimit=8000)
+        decks['monteCarlo'] = ai.monte_carlo_deck(pool, iterationLimit=6000)
         # decks['monteCarlo'] = ai.monte_carlo_deck(pool, timeLimit=8000)
-        for p in Phase:
-            for effect in decks['monteCarlo'][p]['effects']:
-                effects[effect.name] = effects.get(effect.name, 0)
-                effects[effect.name] = effects[effect.name] + 1
+        pass
 
     deckKeys = list(decks.keys())
     for i in range(len(deckKeys) - 1):
         name1 = deckKeys[i]
         deck1 = decks[name1]
         wins[name1] = wins.get(name1, 0)
-        if verbose:
-            # TODO: fix this once I fix deck summary
-            # print('{0}{1}'.format(name1, deck_summary(deck1)))
-            print('{0}{1}'.format(name1, deck1['base']['total']))
         for j in range(i + 1, len(deckKeys)):
             name2 = deckKeys[j]
             deck2 = decks[name2]
@@ -237,4 +232,18 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None):
             if name1 == 'YOU':
                 print(f'{name1} vs {name2}: {m}')
     gamesPlayed += len(decks) - 1
+    effects = {}
+    bestDeck = 'even'
+    for name, deck in decks.items():
+        if wins[name] > wins[bestDeck]:
+            bestDeck = name
+        if verbose:
+            # TODO: fix this once I fix deck summary
+            # print('{0}{1}'.format(name1, deck_summary(deck1)))
+            simpleStr = simple_deck_strength(deck)
+            print('{0} {1} {2}'.format(name, deck['simple']['total'], simpleStr))
+    for p in Phase:
+        for effect in decks[bestDeck][p]['effects']:
+            effects[effect.name] = effects.get(effect.name, 0)
+            effects[effect.name] = effects[effect.name] + 1
     return (wins, gamesPlayed, effects)

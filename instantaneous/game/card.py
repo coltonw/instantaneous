@@ -5,113 +5,15 @@ import sys
 import copy
 from functools import reduce
 
+from instantaneous.game.constants import (Age, Profession, Race, Phase, Mod, Special, USEFUL_PROFS, BASE_STRENGTH,
+                                          EASY_PROF_SYNERGY_THRESHOLD, EASY_RACE_SYNERGY_THRESHOLD,
+                                          HARD_PROF_SYNERGY_THRESHOLD, HARD_RACE_SYNERGY_THRESHOLD,
+                                          PROF_COUNTER_THRESHOLD, RACE_COUNTER_THRESHOLD,
+                                          CRYSTAL_SYNERGY_THRESHOLD, HARD_VARIETY_THRESHOLD,
+                                          EASY_VARIETY_THRESHOLD, HARD_DIVERSITY_THRESHOLD,
+                                          EASY_DIVERSITY_THRESHOLD, DECK_SIZE)
+
 from instantaneous.proto import cardpool_pb2
-
-
-class Age(Enum):
-    STONE = 1
-    IRON = 2
-    CRYSTAL = 4
-
-    def to_proto(self):
-        if self is Age.STONE:
-            return cardpool_pb2.Card.STONE
-        if self is Age.IRON:
-            return cardpool_pb2.Card.IRON
-        if self is Age.CRYSTAL:
-            return cardpool_pb2.Card.CRYSTAL
-
-
-class Race(Enum):
-    BEASTMAN = auto()
-    HUMAN = auto()
-    UNDEAD = auto()
-
-    def to_proto(self):
-        if self is Race.BEASTMAN:
-            return cardpool_pb2.Card.BEASTMAN
-        if self is Race.HUMAN:
-            return cardpool_pb2.Card.HUMAN
-        if self is Race.UNDEAD:
-            return cardpool_pb2.Card.UNDEAD
-
-    def plural(self):
-        if self is Race.BEASTMAN:
-            return 'BEASTMEN'
-        elif self is Race.UNDEAD:
-            return self.name
-        return f"{self.name}S"
-
-
-class Profession(Enum):
-    ALCHEMIST = auto()
-    BATTLETECH = auto()
-    CONJUROR = auto()
-    PROPHET = auto()
-    WOODSMAN = auto()
-    PEASANT = auto()
-
-    def to_proto(self):
-        if self is Profession.ALCHEMIST:
-            return cardpool_pb2.Card.ALCHEMIST
-        if self is Profession.BATTLETECH:
-            return cardpool_pb2.Card.BATTLETECH
-        if self is Profession.CONJUROR:
-            return cardpool_pb2.Card.CONJUROR
-        if self is Profession.PROPHET:
-            return cardpool_pb2.Card.PROPHET
-        if self is Profession.WOODSMAN:
-            return cardpool_pb2.Card.WOODSMAN
-        if self is Profession.PEASANT:
-            return cardpool_pb2.Card.PEASANT
-
-    def plural(self):
-        if self is Profession.WOODSMAN:
-            return 'WOODSMEN'
-        return f"{self.name}S"
-
-
-class Phase(Enum):
-    BEFORE = auto()
-    EFFECT = auto()
-    AFTER = auto()
-    RESULT = auto()
-
-
-class Mod(Enum):
-    NORMAL = auto()
-    DELETE = auto()
-    WEAK = auto()
-    STRONG = auto()
-    EASY_MATCHING_SYNERGY = auto()
-    EASY_NONMATCHING_SYNERGY = auto()
-    HARD_MATCHING_SYNERGY = auto()
-    HARD_NONMATCHING_SYNERGY = auto()
-    COUNTER = auto()
-    TRIGGER = auto()
-    SPECIAL = auto()
-
-
-class Special(Enum):
-    STAIRS = auto()
-
-
-USEFUL_PROFS = [prof for prof in list(Profession) if prof != Profession.PEASANT]
-BASE_STRENGTH = {
-    Age.STONE: [3, 3, 3],
-    Age.IRON: [0, 5, 5],
-    Age.CRYSTAL: [0, 0, 9]
-}
-EASY_PROF_SYNERGY_THRESHOLD = 6
-EASY_RACE_SYNERGY_THRESHOLD = 10
-
-HARD_PROF_SYNERGY_THRESHOLD = 9
-HARD_RACE_SYNERGY_THRESHOLD = 16
-
-PROF_COUNTER_THRESHOLD = 6
-RACE_COUNTER_THRESHOLD = 10
-
-CRYSTAL_SYNERGY_THRESHOLD = 12
 
 
 class Card:
@@ -272,6 +174,7 @@ def pool_to_proto(pool, id='0'):
     protoPool.id = id
     protoCards = map(lambda card: card.to_proto(), pool)
     protoPool.cards.extend(protoCards)
+    protoPool.deck_size = DECK_SIZE
     return protoPool
 
 
@@ -437,7 +340,7 @@ def hydrate_crystal_synergy_trigger(card):
 def hydrate_variety_trigger(card):
     def check(self, deck, oppDeck):
         for p in Profession:
-            if deck['count'][p] < 1:
+            if deck['count'][p] < EASY_VARIETY_THRESHOLD:
                 return False
         return True
     return Trigger(f"you have every profession", check)
@@ -446,28 +349,28 @@ def hydrate_variety_trigger(card):
 def hydrate_hard_variety_trigger(card):
     def check(self, deck, oppDeck):
         for p in Profession:
-            if deck['count'][p] < 3:
+            if deck['count'][p] < HARD_VARIETY_THRESHOLD:
                 return False
         return True
-    return Trigger(f"you have at least 3 of every profession", check)
+    return Trigger(f"you have at least {HARD_VARIETY_THRESHOLD} of every profession", check)
 
 
 def hydrate_diversity_trigger(card):
     def check(self, deck, oppDeck):
         for r in Race:
-            if deck['count'][r] < 2:
+            if deck['count'][r] < EASY_DIVERSITY_THRESHOLD:
                 return False
         return True
-    return Trigger(f"you have at least 2 of every race", check)
+    return Trigger(f"you have at least {EASY_DIVERSITY_THRESHOLD} of every race", check)
 
 
 def hydrate_hard_diversity_trigger(card):
     def check(self, deck, oppDeck):
         for r in Race:
-            if deck['count'][r] < 4:
+            if deck['count'][r] < HARD_DIVERSITY_THRESHOLD:
                 return False
         return True
-    return Trigger(f"you have at least 4 of every race", check)
+    return Trigger(f"you have at least {HARD_DIVERSITY_THRESHOLD} of every race", check)
 
 
 def hydrate_attacker_trigger(card):

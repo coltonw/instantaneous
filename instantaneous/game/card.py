@@ -59,9 +59,8 @@ class Card:
     def to_proto(self):
         protoCard = cardpool_pb2.Card()
         protoCard.id = self.cardId
-        protoCard.stone_strength = self.strength[0]
-        protoCard.iron_strength = self.strength[1]
-        protoCard.crystal_strength = self.strength[2]
+        protoCard.iron_strength = self.strength[0]
+        protoCard.crystal_strength = self.strength[1]
         if self.age is not None:
             protoCard.age = self.age.to_proto()
         if self.race is not None:
@@ -84,6 +83,7 @@ def generate_basic_pool():
         for race in Race:
             for prof in Profession:
                 strength = BASE_STRENGTH[age][:]
+                pool.append(Card(strength, age, race, prof))
                 pool.append(Card(strength, age, race, prof))
                 if age != Age.CRYSTAL:
                     pool.append(Card(strength, age, race, prof))
@@ -150,8 +150,8 @@ def modify_card(card, mod):
 
 def add_special_cards(pool):
     # TODO: Add a bunch more special cards and add rules for how they get added to the pool
-    pool.append(Card([1, 3, 6], None, random.choice(list(Race)), random.choice(USEFUL_PROFS), desc='stair', mod=Mod.SPECIAL))
-    # pool.append(Card([8, 0, 0], None, random.choice(list(Race)), random.choice(USEFUL_PROFS), desc='stone-ly', mod=Mod.SPECIAL))\
+    pool.append(Card([3, 6], None, random.choice(list(Race)), random.choice(USEFUL_PROFS), desc='stair', mod=Mod.SPECIAL))
+    # pool.append(Card([9, 0], None, random.choice(list(Race)), random.choice(USEFUL_PROFS), desc='iron-only', mod=Mod.SPECIAL))
     return pool
 
 
@@ -409,7 +409,7 @@ def hydrate_strong_result(card):
     # rand = random.Random(card.resultSeed)
 
     def apply(self, deck, oppDeck):
-        for ageIdx in range(3):
+        for ageIdx in range(2):
             if deck[self.cardId].strength[ageIdx] > 0:
                 deck[self.cardId].strength[ageIdx] += card.age.value
                 deck['total'][ageIdx] += card.age.value
@@ -425,7 +425,7 @@ def hydrate_ultrastrong_lowstart_result(card):
         return _weaken(c.strength)
 
     def apply(self, deck, oppDeck):
-        for ageIdx in range(3):
+        for ageIdx in range(2):
             if deck[self.cardId].strength[ageIdx] > 0:
                 deck[self.cardId].strength[ageIdx] += 1 + ceil(card.age.value * 1.5)
                 deck['total'][ageIdx] += 1 + ceil(card.age.value * 1.5)

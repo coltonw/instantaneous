@@ -130,73 +130,40 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None):
         decks['YOU'] = yourDeck
         display_cards(decks['YOU'])
     decks['even'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.EVEN)])
-    decks['stoneOnly'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.STONE)])
     decks['ironOnly'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.IRON)])
     decks['crystalOnly'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.CRYSTAL)])
-    decks['stoneIron'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.STONE_IRON)])
-    decks['stoneCrystal'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.STONE_CRYSTAL)])
-    decks['ironCrystal'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.IRON_CRYSTAL)])
-    # decks['stoneMostly'] = stoneAgePool + stoneAgePool[-3:0] + ironAgePool[0:2]
-    # decks['stoneThresholdIronMostly'] = stoneAgePool[0:4] + ironAgePool + ironAgePool[-1:0]
-    decks['4stoneEven'] = ai.build_deck(pool, [
-        ai.breakdown_strat(ai.Breakdown.STONE),
+    decks['4iron'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.IRON),
         ai.fill_strat(4),
-        ai.breakdown_strat(ai.Breakdown.IRON_CRYSTAL)
+        ai.breakdown_strat(ai.Breakdown.CRYSTAL)
     ])
-    # decks['strong'] = stoneAgePool[0:5] + ironAgePool[0:5] + crystalAgePool[0:10]
     decks['maxHard'] = ai.build_deck(pool, [ai.max_hard_synergy_strat()])
-    decks['stoneMaxHard'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.STONE), ai.max_hard_synergy_strat()])
-    decks['maxHardStone'] = ai.build_deck(pool, [ai.max_hard_synergy_strat(), ai.breakdown_strat(ai.Breakdown.STONE)])
-    decks['stoneIronMaxHard'] = ai.build_deck(pool, [
-        ai.breakdown_strat(ai.Breakdown.STONE_IRON),
-        ai.max_hard_synergy_strat(),
-        ai.breakdown_strat(ai.Breakdown.STONE)
-    ])
+    decks['ironMaxHard'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.IRON), ai.max_hard_synergy_strat()])
+    decks['maxHardIron'] = ai.build_deck(pool, [ai.max_hard_synergy_strat(), ai.breakdown_strat(ai.Breakdown.IRON)])
     decks['counterMaxHard'] = ai.build_deck(pool, [ai.counter_max_hard_strat()])
     for race in Race:
         decks[f'{race.name.lower()}HardSynergy'] = ai.build_deck(pool, [ai.hard_synergy_strat(race)])
     for prof in USEFUL_PROFS:
         decks[f'{prof.name.lower()}HardSynergy'] = ai.build_deck(pool, [ai.hard_synergy_strat(prof)])
 
-    decks['strongStoneIron'] = ai.build_deck(pool, [ai.strong_strat(), ai.breakdown_strat(ai.Breakdown.STONE_IRON)])
-    decks['15StoneIron'] = ai.build_deck(pool, [
-        ai.breakdown_strat(ai.Breakdown.STONE),
+    decks['strongIron'] = ai.build_deck(pool, [ai.strong_strat(), ai.breakdown_strat(ai.Breakdown.IRON)])
+    decks['15Iron'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.IRON),
         ai.fill_strat(15),
-        ai.breakdown_strat(ai.Breakdown.IRON)
+        ai.breakdown_strat(ai.Breakdown.CRYSTAL)
     ])
-    decks['stoneIronLopsided'] = ai.build_deck(pool, [
-        ai.breakdown_strat(ai.Breakdown.STONE_IRON),
+    decks['ironLopsided'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.IRON),
         ai.strong_strat(),
         ai.lopsided_fill_strat(12),
         ai.easy_synergy_strat()
     ])
-    decks['18StoneIron'] = ai.build_deck(pool, [
-        ai.breakdown_strat(ai.Breakdown.STONE),
-        ai.fill_strat(18),
-        ai.breakdown_strat(ai.Breakdown.IRON)
-    ])
-
-    decks['12StoneEven'] = ai.build_deck(pool, [
-        ai.breakdown_strat(ai.Breakdown.STONE),
-        ai.fill_strat(12),
-        ai.breakdown_strat(ai.Breakdown.IRON_CRYSTAL)
-    ])
-    decks['15StoneEven'] = ai.build_deck(pool, [
-        ai.breakdown_strat(ai.Breakdown.STONE),
-        ai.fill_strat(15),
-        ai.breakdown_strat(ai.Breakdown.IRON_CRYSTAL)
-    ])
-    decks['18StoneEven'] = ai.build_deck(pool, [
-        ai.breakdown_strat(ai.Breakdown.STONE),
-        ai.fill_strat(18),
-        ai.breakdown_strat(ai.Breakdown.IRON_CRYSTAL)
-    ])
-
-    decks['17StoneCrystal'] = ai.build_deck(pool, [
-        ai.breakdown_strat(ai.Breakdown.STONE),
+    decks['18Iron'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.IRON),
         ai.fill_strat(18),
         ai.breakdown_strat(ai.Breakdown.CRYSTAL)
     ])
+
     decks['strong'] = ai.build_deck(pool, [])
     decks['specialStrong'] = ai.build_deck(pool, [ai.special_strat()])
 

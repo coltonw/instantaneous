@@ -1,12 +1,12 @@
 import copy
-from instantaneous.game.constants import Age, Profession, Race, Phase, STONE_BONUS_THRESHOLD, IRON_BONUS_THRESHOLD
+from instantaneous.game.constants import Age, Profession, Race, Phase
 
 
 def simple_deck_strength(deckMetadata):
     if 'simple' not in deckMetadata:
         simple_match(deckMetadata)
-    return (deckMetadata['simple']['total'][0] * 2 + deckMetadata['simple']['total'][1] +
-            deckMetadata['simple']['total'][2])
+    return (deckMetadata['simple']['total'][0] +
+            deckMetadata['simple']['total'][1])
 
 
 # deckMetadata: {
@@ -73,7 +73,6 @@ def add_card(deckMetadata, card):
 
     deckMetadata['base']['total'][0] += card.strength[0]
     deckMetadata['base']['total'][1] += card.strength[1]
-    deckMetadata['base']['total'][2] += card.strength[2]
 
     for effect in card.effects:
         deckMetadata['interactive'] = deckMetadata['interactive'] or effect.interactive
@@ -132,23 +131,14 @@ def match(deckMetadata1, deckMetadata2, verbose=False):
             simple_match(deckMetadata2)
         deckMetadata2['cur']['total'] = deckMetadata2['simple']['total']
 
-    stoneResult = deckMetadata1['cur']['total'][0] - deckMetadata2['cur']['total'][0]
-    stoneBonus = stoneResult
-    if verbose:
-        print(f'stone result: {stoneResult}')
-    if abs(stoneResult) < STONE_BONUS_THRESHOLD:
-        stoneBonus = 0
-    ironResult = deckMetadata1['cur']['total'][1] - deckMetadata2['cur']['total'][1] + stoneBonus
-    ironBonus = ironResult
+    ironResult = deckMetadata1['cur']['total'][0] - deckMetadata2['cur']['total'][0]
+    ironBonus = 0
+    # subtract 3 from the bonus to a minimum of 3
+    if ironResult > 0:
+        ironBonus = max(ironResult - 4, 0)
+    else:
+        # (where "subtract" means subtract from the winner which mean add if the opponent won)
+        ironBonus = min(ironResult + 4, 0)
     if verbose:
         print(f'iron result: {ironResult}')
-    if abs(ironResult) < IRON_BONUS_THRESHOLD:
-        ironBonus = 0
-    # You only get the stone bonus in phase three if you also won the iron age
-    if (ironResult >= 0 and stoneResult >= 0) or (ironResult <= 0 and stoneResult <= 0):
-        ironBonus = ironBonus + stoneBonus
-    return deckMetadata1['cur']['total'][2] - deckMetadata2['cur']['total'][2] + ironBonus
-
-# TODO: fix this.  Depends on fixing simple_deck_strength or just adding precalced deck stuff to metadata
-# def deck_summary(deckMetadata):
-#     return f'(stone={deckMetadata['base']['count'][Age.STONE]},{_deck_strength(0, deck, [])}str;iron={age_count(Age.IRON, deck)},{_deck_strength(1, deck, [])}str;crystal={age_count(Age.CRYSTAL, deck)},{_deck_strength(2, deck, [])}str)'
+    return deckMetadata1['cur']['total'][1] - deckMetadata2['cur']['total'][1] + ironBonus

@@ -8,13 +8,9 @@ from .montecarlo import mcts
 
 
 class Breakdown(Flag):
-    STONE = auto()
     IRON = auto()
     CRYSTAL = auto()
-    STONE_IRON = STONE | IRON
-    STONE_CRYSTAL = STONE | CRYSTAL
-    IRON_CRYSTAL = IRON | CRYSTAL
-    EVEN = STONE | IRON | CRYSTAL
+    EVEN = IRON | CRYSTAL
 
 
 def deck_sample(deck, samplePool, sampleSize=DECK_SIZE):
@@ -23,7 +19,7 @@ def deck_sample(deck, samplePool, sampleSize=DECK_SIZE):
 
 
 def is_weak(card):
-    return card.age is not None and card.strength[2] < BASE_STRENGTH[card.age][2]
+    return card.age is not None and card.strength[1] < BASE_STRENGTH[card.age][1]
 
 
 # this is an arbitrary card strength value used for sorting
@@ -43,10 +39,9 @@ def sort_by_strength(basePool):
 
 def age_breakdown(cards):
     cards = sort_by_strength(cards)
-    stone = [card for card in cards if card.age == Age.STONE]
     iron = [card for card in cards if card.age == Age.IRON]
     crystal = [card for card in cards if card.age == Age.CRYSTAL]
-    return (stone, iron, crystal)
+    return (iron, crystal)
 
 
 def get_age_pools(basePool):
@@ -86,19 +81,10 @@ def _add_cards(pool, deckMap, ageCounts, count=None):
 
 
 def _add_cards_with_breakdown(pool, deckMap, breakdown, ageCounts, count=None):
-    (stone, iron, crystal) = age_breakdown(pool)
+    (iron, crystal) = age_breakdown(pool)
     startingAgeCounts = ageCounts.copy()
     cardsAdded = 0
     for i in range(DECK_SIZE):
-        if len(deckMap) >= DECK_SIZE or (count is not None and cardsAdded >= count):
-            return (deckMap, ageCounts)
-        needsStone = Breakdown.STONE in breakdown
-        stoneIdx = i - startingAgeCounts.get(Age.STONE, 0)
-        if len(stone) > stoneIdx and stoneIdx >= 0 and needsStone:
-            if stone[stoneIdx].cardId not in deckMap:
-                deckMap.update({stone[stoneIdx].cardId: stone[stoneIdx]})
-                ageCounts[Age.STONE] = ageCounts.get(Age.STONE, 0) + 1
-                cardsAdded = cardsAdded + 1
         if len(deckMap) >= DECK_SIZE or (count is not None and cardsAdded >= count):
             return (deckMap, ageCounts)
         needsIron = Breakdown.IRON in breakdown
@@ -320,7 +306,7 @@ def build_deck(basePool, strategies):
 
 def random_good_strategy(basePool):
     strats = []
-    breakdown = choices([Breakdown.STONE, Breakdown.STONE_IRON, Breakdown.EVEN, None], weights=[1, 2, 3, 6])[0]
+    breakdown = choices([Breakdown.IRON, Breakdown.EVEN, None], weights=[1, 2, 3])[0]
 
     if breakdown is not None:
         strats.append(breakdown_strat(breakdown))

@@ -18,7 +18,7 @@ def simple_deck_strength(deckMetadata):
 #             Age.CRYSTAL: 0,
 #             Profession.ALCHEMIST: 0,
 #         },
-#         total: [0, 0, 0]
+#         total: [0, 0]
 #     },
 #     cur:  { same as base...},
 #     simple: { same as base...},
@@ -31,7 +31,7 @@ _baseMetadata = {
     'deck': [],
     'base': {
         'count': {},
-        'total': [0, 0, 0]
+        'total': [0, 0]
     },
     'interactive': False
 }

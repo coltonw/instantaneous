@@ -116,7 +116,7 @@ def play(yourDeckProto, pool):
     return result
 
 
-def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None):
+def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None, monte=False):
     if not pool:
         pool = generate_pool()
     if verbose:
@@ -177,10 +177,9 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None):
 
     # Monte Carlo is super slow compared to other ai so they are disabled unless running simulations
     # or 6000 rounds (around 8 seconds) seems to be the right number for best results
-    if 'YOU' not in decks:
+    if monte:
         decks['monteCarlo'] = ai.monte_carlo_deck(pool, iterationLimit=6000)
         # decks['monteCarlo'] = ai.monte_carlo_deck(pool, timeLimit=8000)
-        pass
 
     deckKeys = list(decks.keys())
     for i in range(len(deckKeys) - 1):

@@ -3,8 +3,8 @@ from instantaneous.proto import cardpool_pb2
 
 
 class Age(Enum):
-    IRON = 2
-    CRYSTAL = 4
+    IRON = auto()
+    CRYSTAL = auto()
 
     def to_proto(self):
         if self is Age.IRON:
@@ -87,11 +87,17 @@ class Special(Enum):
     STAIRS = auto()
 
 
-USEFUL_PROFS = [prof for prof in list(Profession) if prof != Profession.PEASANT]
 BASE_STRENGTH = {
-    Age.IRON: [5, 5],
-    Age.CRYSTAL: [0, 9]
+    Age.IRON: [4, 4],
+    Age.CRYSTAL: [0, 7]
 }
+# power 0, 1, 2, 3
+# for iron age, these are split evenly so they must be even
+POWER_ADVANTAGE = [0, 2, 4, 6]
+
+
+USEFUL_PROFS = [prof for prof in list(Profession) if prof != Profession.PEASANT]
+
 EASY_PROF_SYNERGY_THRESHOLD = 5
 EASY_RACE_SYNERGY_THRESHOLD = 8
 
@@ -110,8 +116,4 @@ HARD_VARIETY_THRESHOLD = 2
 EASY_DIVERSITY_THRESHOLD = 2
 HARD_DIVERSITY_THRESHOLD = 4
 
-# these are one less than 4 base strength cards.
-# This means you can win an age with 2 strong cards and 1 base strength card
-# or with 1 really strong card and 2 base strength cards
-IRON_BONUS_THRESHOLD = 19
 DECK_SIZE = 16

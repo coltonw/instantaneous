@@ -6,11 +6,12 @@ from instantaneous.game import match
 
 
 verbose = False
+monte = False
 
 
 def multiSim(idx):
     global verbose
-    return simulate({}, 0, verbose=verbose)
+    return simulate({}, 0, verbose=verbose, monte=monte)
 
 
 def combineDictOfInts(d1, d2):
@@ -45,6 +46,17 @@ try:
     print(f'simulating {sims} times')
 except (IndexError, ValueError):
     print('simulating 10 times')
+
+try:
+    if sys.argv[2].startswith('m'):
+        monte = True
+        print(f'including monte')
+except (IndexError, ValueError):
+    pass
+
+if not monte:
+    print('NOT including monte')
+
 if sims == 1:
     verbose = True
 pool = Pool()

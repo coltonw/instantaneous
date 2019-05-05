@@ -395,8 +395,8 @@ def hydrate_defender_trigger(card):
 
 def hydrate_close_defender_trigger(card):
     def check(self, deck, oppDeck):
-        return deck['total'][0] < oppDeck['total'][0] and oppDeck['total'][0] - deck['total'][0] < 30
-    return Trigger(f"you are losing the first age by less than 30", check)
+        return deck['total'][0] < oppDeck['total'][0] and oppDeck['total'][0] - deck['total'][0] < 25
+    return Trigger(f"you are losing the first age by less than 25", check)
 
 
 triggerTypes = [

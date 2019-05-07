@@ -23,6 +23,21 @@ message DeckResult {
     int32 simple_crystal_winner = 9;
 }
 
+message CardEffect {
+    enum Phase {
+        NONE_PHASE = 0;
+        BEFORE = 1;
+        EFFECT = 2;
+        AFTER = 3;
+        RESULT = 4;
+    }
+    Phase phase = 1;
+    string trigger_name = 2;
+    int64 trigger_seed = 3;
+    string result_name = 4;
+    int64 result_seed = 5;
+}
+
 // This card is for describing all displayable information to the client so that they can show the card to the user.
 // Card functionality is all done server side right now so that is not transfered at all.
 message Card {
@@ -64,4 +79,8 @@ message Card {
     string desc = 8;
     Race race_synergy = 9;
     Profession prof_synergy = 10;
+
+    // details needed only for serialization
+    // probably do not include if sending to client
+    repeated CardEffect effects = 11;
 }

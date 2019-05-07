@@ -19,10 +19,44 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\"instantaneous/proto/cardpool.proto\"?\n\x08\x43\x61rdPool\x12\n\n\x02id\x18\x01 \x01(\t\x12\x14\n\x05\x63\x61rds\x18\x02 \x03(\x0b\x32\x05.Card\x12\x11\n\tdeck_size\x18\x03 \x01(\x05\")\n\x04\x44\x65\x63k\x12\x0f\n\x07pool_id\x18\x01 \x01(\t\x12\x10\n\x08\x63\x61rd_ids\x18\x02 \x03(\x05\"\xc6\x01\n\nDeckResult\x12\x10\n\x08win_rate\x18\x01 \x01(\x02\x12\x0c\n\x04wins\x18\x02 \x01(\x05\x12\x0e\n\x06losses\x18\x03 \x01(\x05\x12\x0c\n\x04rank\x18\x04 \x01(\x05\x12\x12\n\npercentile\x18\x05 \x01(\x02\x12\x13\n\x0bsimple_iron\x18\x06 \x01(\x05\x12\x16\n\x0esimple_crystal\x18\x07 \x01(\x05\x12\x1a\n\x12simple_iron_winner\x18\x08 \x01(\x05\x12\x1d\n\x15simple_crystal_winner\x18\t \x01(\x05\"\xd3\x03\n\x04\x43\x61rd\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x15\n\riron_strength\x18\x03 \x01(\x05\x12\x18\n\x10\x63rystal_strength\x18\x04 \x01(\x05\x12\x16\n\x03\x61ge\x18\x05 \x01(\x0e\x32\t.Card.Age\x12\x18\n\x04race\x18\x06 \x01(\x0e\x32\n.Card.Race\x12\x1e\n\x04prof\x18\x07 \x01(\x0e\x32\x10.Card.Profession\x12\x0c\n\x04\x64\x65sc\x18\x08 \x01(\t\x12 \n\x0crace_synergy\x18\t \x01(\x0e\x32\n.Card.Race\x12&\n\x0cprof_synergy\x18\n \x01(\x0e\x32\x10.Card.Profession\"0\n\x03\x41ge\x12\x0c\n\x08NONE_AGE\x10\x00\x12\x08\n\x04IRON\x10\x02\x12\x0b\n\x07\x43RYSTAL\x10\x03\"\x04\x08\x01\x10\x01\":\n\x04Race\x12\r\n\tNONE_RACE\x10\x00\x12\x0c\n\x08\x42\x45\x41STMAN\x10\x01\x12\t\n\x05HUMAN\x10\x02\x12\n\n\x06UNDEAD\x10\x03\"p\n\nProfession\x12\r\n\tNONE_PROF\x10\x00\x12\r\n\tALCHEMIST\x10\x01\x12\x0e\n\nBATTLETECH\x10\x02\x12\x0c\n\x08\x43ONJUROR\x10\x03\x12\x0b\n\x07PROPHET\x10\x04\x12\x0c\n\x08WOODSMAN\x10\x05\x12\x0b\n\x07PEASANT\x10\x06J\x04\x08\x02\x10\x03\x62\x06proto3')
+  serialized_pb=_b('\n\"instantaneous/proto/cardpool.proto\"?\n\x08\x43\x61rdPool\x12\n\n\x02id\x18\x01 \x01(\t\x12\x14\n\x05\x63\x61rds\x18\x02 \x03(\x0b\x32\x05.Card\x12\x11\n\tdeck_size\x18\x03 \x01(\x05\")\n\x04\x44\x65\x63k\x12\x0f\n\x07pool_id\x18\x01 \x01(\t\x12\x10\n\x08\x63\x61rd_ids\x18\x02 \x03(\x05\"\xc6\x01\n\nDeckResult\x12\x10\n\x08win_rate\x18\x01 \x01(\x02\x12\x0c\n\x04wins\x18\x02 \x01(\x05\x12\x0e\n\x06losses\x18\x03 \x01(\x05\x12\x0c\n\x04rank\x18\x04 \x01(\x05\x12\x12\n\npercentile\x18\x05 \x01(\x02\x12\x13\n\x0bsimple_iron\x18\x06 \x01(\x05\x12\x16\n\x0esimple_crystal\x18\x07 \x01(\x05\x12\x1a\n\x12simple_iron_winner\x18\x08 \x01(\x05\x12\x1d\n\x15simple_crystal_winner\x18\t \x01(\x05\"\xcc\x01\n\nCardEffect\x12 \n\x05phase\x18\x01 \x01(\x0e\x32\x11.CardEffect.Phase\x12\x14\n\x0ctrigger_name\x18\x02 \x01(\t\x12\x14\n\x0ctrigger_seed\x18\x03 \x01(\x03\x12\x13\n\x0bresult_name\x18\x04 \x01(\t\x12\x13\n\x0bresult_seed\x18\x05 \x01(\x03\"F\n\x05Phase\x12\x0e\n\nNONE_PHASE\x10\x00\x12\n\n\x06\x42\x45\x46ORE\x10\x01\x12\n\n\x06\x45\x46\x46\x45\x43T\x10\x02\x12\t\n\x05\x41\x46TER\x10\x03\x12\n\n\x06RESULT\x10\x04\"\xf1\x03\n\x04\x43\x61rd\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x15\n\riron_strength\x18\x03 \x01(\x05\x12\x18\n\x10\x63rystal_strength\x18\x04 \x01(\x05\x12\x16\n\x03\x61ge\x18\x05 \x01(\x0e\x32\t.Card.Age\x12\x18\n\x04race\x18\x06 \x01(\x0e\x32\n.Card.Race\x12\x1e\n\x04prof\x18\x07 \x01(\x0e\x32\x10.Card.Profession\x12\x0c\n\x04\x64\x65sc\x18\x08 \x01(\t\x12 \n\x0crace_synergy\x18\t \x01(\x0e\x32\n.Card.Race\x12&\n\x0cprof_synergy\x18\n \x01(\x0e\x32\x10.Card.Profession\x12\x1c\n\x07\x65\x66\x66\x65\x63ts\x18\x0b \x03(\x0b\x32\x0b.CardEffect\"0\n\x03\x41ge\x12\x0c\n\x08NONE_AGE\x10\x00\x12\x08\n\x04IRON\x10\x02\x12\x0b\n\x07\x43RYSTAL\x10\x03\"\x04\x08\x01\x10\x01\":\n\x04Race\x12\r\n\tNONE_RACE\x10\x00\x12\x0c\n\x08\x42\x45\x41STMAN\x10\x01\x12\t\n\x05HUMAN\x10\x02\x12\n\n\x06UNDEAD\x10\x03\"p\n\nProfession\x12\r\n\tNONE_PROF\x10\x00\x12\r\n\tALCHEMIST\x10\x01\x12\x0e\n\nBATTLETECH\x10\x02\x12\x0c\n\x08\x43ONJUROR\x10\x03\x12\x0b\n\x07PROPHET\x10\x04\x12\x0c\n\x08WOODSMAN\x10\x05\x12\x0b\n\x07PEASANT\x10\x06J\x04\x08\x02\x10\x03\x62\x06proto3')
 )
 
 
+
+_CARDEFFECT_PHASE = _descriptor.EnumDescriptor(
+  name='Phase',
+  full_name='CardEffect.Phase',
+  filename=None,
+  file=DESCRIPTOR,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='NONE_PHASE', index=0, number=0,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='BEFORE', index=1, number=1,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='EFFECT', index=2, number=2,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='AFTER', index=3, number=3,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='RESULT', index=4, number=4,
+      serialized_options=None,
+      type=None),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=482,
+  serialized_end=552,
+)
+_sym_db.RegisterEnumDescriptor(_CARDEFFECT_PHASE)
 
 _CARD_AGE = _descriptor.EnumDescriptor(
   name='Age',
@@ -45,8 +79,8 @@ _CARD_AGE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=587,
-  serialized_end=635,
+  serialized_start=824,
+  serialized_end=872,
 )
 _sym_db.RegisterEnumDescriptor(_CARD_AGE)
 
@@ -75,8 +109,8 @@ _CARD_RACE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=637,
-  serialized_end=695,
+  serialized_start=874,
+  serialized_end=932,
 )
 _sym_db.RegisterEnumDescriptor(_CARD_RACE)
 
@@ -117,8 +151,8 @@ _CARD_PROFESSION = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=697,
-  serialized_end=809,
+  serialized_start=934,
+  serialized_end=1046,
 )
 _sym_db.RegisterEnumDescriptor(_CARD_PROFESSION)
 
@@ -293,6 +327,66 @@ _DECKRESULT = _descriptor.Descriptor(
 )
 
 
+_CARDEFFECT = _descriptor.Descriptor(
+  name='CardEffect',
+  full_name='CardEffect',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='phase', full_name='CardEffect.phase', index=0,
+      number=1, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='trigger_name', full_name='CardEffect.trigger_name', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='trigger_seed', full_name='CardEffect.trigger_seed', index=2,
+      number=3, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='result_name', full_name='CardEffect.result_name', index=3,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='result_seed', full_name='CardEffect.result_seed', index=4,
+      number=5, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+    _CARDEFFECT_PHASE,
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=348,
+  serialized_end=552,
+)
+
+
 _CARD = _descriptor.Descriptor(
   name='Card',
   full_name='Card',
@@ -363,6 +457,13 @@ _CARD = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='effects', full_name='Card.effects', index=9,
+      number=11, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -378,22 +479,26 @@ _CARD = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=348,
-  serialized_end=815,
+  serialized_start=555,
+  serialized_end=1052,
 )
 
 _CARDPOOL.fields_by_name['cards'].message_type = _CARD
+_CARDEFFECT.fields_by_name['phase'].enum_type = _CARDEFFECT_PHASE
+_CARDEFFECT_PHASE.containing_type = _CARDEFFECT
 _CARD.fields_by_name['age'].enum_type = _CARD_AGE
 _CARD.fields_by_name['race'].enum_type = _CARD_RACE
 _CARD.fields_by_name['prof'].enum_type = _CARD_PROFESSION
 _CARD.fields_by_name['race_synergy'].enum_type = _CARD_RACE
 _CARD.fields_by_name['prof_synergy'].enum_type = _CARD_PROFESSION
+_CARD.fields_by_name['effects'].message_type = _CARDEFFECT
 _CARD_AGE.containing_type = _CARD
 _CARD_RACE.containing_type = _CARD
 _CARD_PROFESSION.containing_type = _CARD
 DESCRIPTOR.message_types_by_name['CardPool'] = _CARDPOOL
 DESCRIPTOR.message_types_by_name['Deck'] = _DECK
 DESCRIPTOR.message_types_by_name['DeckResult'] = _DECKRESULT
+DESCRIPTOR.message_types_by_name['CardEffect'] = _CARDEFFECT
 DESCRIPTOR.message_types_by_name['Card'] = _CARD
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -417,6 +522,13 @@ DeckResult = _reflection.GeneratedProtocolMessageType('DeckResult', (_message.Me
   # @@protoc_insertion_point(class_scope:DeckResult)
   ))
 _sym_db.RegisterMessage(DeckResult)
+
+CardEffect = _reflection.GeneratedProtocolMessageType('CardEffect', (_message.Message,), dict(
+  DESCRIPTOR = _CARDEFFECT,
+  __module__ = 'instantaneous.proto.cardpool_pb2'
+  # @@protoc_insertion_point(class_scope:CardEffect)
+  ))
+_sym_db.RegisterMessage(CardEffect)
 
 Card = _reflection.GeneratedProtocolMessageType('Card', (_message.Message,), dict(
   DESCRIPTOR = _CARD,

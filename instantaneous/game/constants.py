@@ -13,6 +13,14 @@ class Age(Enum):
             return cardpool_pb2.Card.CRYSTAL
 
 
+def age_from_proto(proto):
+    if proto is cardpool_pb2.Card.IRON:
+        return Age.IRON
+    if proto is cardpool_pb2.Card.CRYSTAL:
+        return Age.CRYSTAL
+    return None
+
+
 class Race(Enum):
     BEASTMAN = auto()
     HUMAN = auto()
@@ -32,6 +40,16 @@ class Race(Enum):
         elif self is Race.UNDEAD:
             return self.name
         return f"{self.name}S"
+
+
+def race_from_proto(proto):
+    if proto is cardpool_pb2.Card.BEASTMAN:
+        return Race.BEASTMAN
+    if proto is cardpool_pb2.Card.HUMAN:
+        return Race.HUMAN
+    if proto is cardpool_pb2.Card.UNDEAD:
+        return Race.UNDEAD
+    return None
 
 
 class Profession(Enum):
@@ -62,11 +80,39 @@ class Profession(Enum):
         return f"{self.name}S"
 
 
+def prof_from_proto(proto):
+    if proto is cardpool_pb2.Card.ALCHEMIST:
+        return Profession.ALCHEMIST
+    if proto is cardpool_pb2.Card.BATTLETECH:
+        return Profession.BATTLETECH
+    if proto is cardpool_pb2.Card.CONJUROR:
+        return Profession.CONJUROR
+    if proto is cardpool_pb2.Card.PROPHET:
+        return Profession.PROPHET
+    if proto is cardpool_pb2.Card.WOODSMAN:
+        return Profession.WOODSMAN
+    if proto is cardpool_pb2.Card.PEASANT:
+        return Profession.PEASANT
+    return None
+
+
 class Phase(Enum):
     BEFORE = auto()
     EFFECT = auto()
     AFTER = auto()
     RESULT = auto()
+
+
+def phase_from_proto(proto):
+    if proto is cardpool_pb2.CardEffect.BEFORE:
+        return Phase.BEFORE
+    if proto is cardpool_pb2.CardEffect.EFFECT:
+        return Phase.EFFECT
+    if proto is cardpool_pb2.CardEffect.AFTER:
+        return Phase.AFTER
+    if proto is cardpool_pb2.CardEffect.RESULT:
+        return Phase.RESULT
+    return None
 
 
 class Mod(Enum):

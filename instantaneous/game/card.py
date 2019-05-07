@@ -13,7 +13,8 @@ from instantaneous.game.constants import (Age, Profession, Race, Phase, Mod, Spe
                                           PROF_COUNTER_THRESHOLD, RACE_COUNTER_THRESHOLD,
                                           CRYSTAL_SYNERGY_THRESHOLD, HARD_VARIETY_THRESHOLD,
                                           EASY_VARIETY_THRESHOLD, HARD_DIVERSITY_THRESHOLD,
-                                          EASY_DIVERSITY_THRESHOLD, DECK_SIZE)
+                                          EASY_DIVERSITY_THRESHOLD, DECK_SIZE, phase_from_proto,
+                                          age_from_proto, race_from_proto, prof_from_proto)
 
 from instantaneous.proto import cardpool_pb2
 
@@ -60,7 +61,7 @@ class Card:
                     synergy=self.synergy, effects=copy.deepcopy(self.effects),
                     cardId=self.cardId)
 
-    def to_proto(self):
+    def to_proto(self, complete=False):
         protoCard = cardpool_pb2.Card()
         protoCard.id = self.cardId
         protoCard.iron_strength = self.strength[0]
@@ -76,8 +77,33 @@ class Card:
             protoCard.race_synergy = self.synergy.to_proto()
         elif isinstance(self.synergy, Profession):
             protoCard.prof_synergy = self.synergy.to_proto()
+        if complete:
+            for effect in self.effects:
+                protoEffect = protoCard.effects.add()
+                if effect.triggerName is not None:
+                    protoEffect.trigger_name = effect.triggerName
+                if effect.triggerSeed is not None:
+                    protoEffect.trigger_seed = effect.triggerSeed
+                if effect.resultName is not None:
+                    protoEffect.result_name = effect.resultName
+                if effect.resultSeed is not None:
+                    protoEffect.result_seed = effect.resultSeed
 
         return protoCard
+
+
+def card_from_proto(protoCard):
+    synergy = None
+    if protoCard.race_synergy is not cardpool_pb2.Card.NONE_RACE:
+        synergy = race_from_proto(protoCard.race_synergy)
+    elif protoCard.prof_synergy is not cardpool_pb2.Card.NONE_PROF:
+        synergy = prof_from_proto(protoCard.prof_synergy)
+    card = Card([protoCard.iron_strength, protoCard.crystal_strength], age_from_proto(protoCard.age),
+                race_from_proto(protoCard.race), prof_from_proto(protoCard.prof), desc=protoCard.desc,
+                synergy=synergy, cardId=protoCard.id)
+    hydrate_effects_from_proto(card, protoCard)
+
+    return card
 
 
 def generate_basic_pool():
@@ -190,13 +216,19 @@ def pool_to_proto(pool, id='0'):
 
 
 class Effect:
-    def __init__(self, check, apply, phase, interactive, cardId, name=''):
+    def __init__(self, check, apply, phase, interactive, cardId, name='',
+                 triggerName=None, triggerSeed=None, resultName=None,
+                 resultSeed=None):
         self.checkFn = check
         self.applyFn = apply
         self.phase = phase
         self.interactive = interactive
         self.cardId = cardId
         self.name = name
+        self.triggerName = triggerName
+        self.triggerSeed = triggerSeed
+        self.resultName = resultName
+        self.resultSeed = resultSeed
 
     def check(self, deckMetadata, oppDeckMetadata):
         return self.checkFn(self, deckMetadata, oppDeckMetadata)
@@ -268,19 +300,6 @@ class ResultType:
 
     def __str__(self):
         return repr(self)
-
-
-def combine_trigger_result(card, trigger, result, phase=Phase.EFFECT, interactive=False, name=''):
-    if card.mod is Mod.NORMAL:
-        card.mod = Mod.TRIGGER
-    if result.starting_str is not None:
-        card.strength = result.starting_str(card)
-
-    if result.apply is not None:
-        effect = Effect(check=trigger.check, apply=result.apply, phase=phase,
-                        interactive=interactive, cardId=card.cardId, name=name)
-        card.effects.append(effect)
-    card.desc = f'If {trigger.desc}, {result.desc}'
 
 
 ############
@@ -402,6 +421,7 @@ def hydrate_close_defender_trigger(card):
     return Trigger(f"you are losing the first age by less than 25", check)
 
 
+# TODO: weights and possibly limits
 triggerTypes = [
     TriggerType("easy_synergy", hydrate_easy_synergy_trigger),
     TriggerType("hard_synergy", hydrate_hard_synergy_trigger, difficulty=3),
@@ -529,6 +549,45 @@ def generate_trigger_result(card, difficulty=None):
                 phase = p
                 break
 
-    combine_trigger_result(card, trigger, result, phase=phase,
-                           interactive=triggerType.interactive or resultType.interactive,
-                           name=f'{triggerType.name}-{resultType.name}')
+    if card.mod is Mod.NORMAL:
+        card.mod = Mod.TRIGGER
+    if result.starting_str is not None:
+        card.strength = result.starting_str(card)
+
+    if result.apply is not None:
+        effect = Effect(check=trigger.check, apply=result.apply, phase=phase,
+                        interactive=triggerType.interactive or resultType.interactive, cardId=card.cardId,
+                        name=f'{triggerType.name}-{resultType.name}', triggerName=triggerType.name,
+                        triggerSeed=card.triggerSeed, resultName=resultType.name, resultSeed=card.resultSeed)
+        card.effects.append(effect)
+    card.desc = f'If {trigger.desc}, {result.desc}'
+
+    return card
+
+
+def hydrate_effects_from_proto(card, protoCard):
+    for protoEffect in protoCard.effects:
+        triggerType = None
+        for tt in triggerTypes:
+            if tt.name == protoEffect.trigger_name:
+                triggerType = tt
+                break
+        resultType = None
+        for rt in resultTypes:
+            if rt.name == protoEffect.result_name:
+                resultType = rt
+        if resultType is None or triggerType is None:
+            return
+
+        card.triggerSeed = protoEffect.trigger_seed
+        trigger = triggerType.hydrate(card)
+
+        card.resultSeed = protoEffect.result_seed
+        result = resultType.hydrate(card)
+
+        effect = Effect(check=trigger.check, apply=result.apply, phase=phase_from_proto(protoEffect.phase),
+                        interactive=triggerType.interactive or resultType.interactive, cardId=card.cardId,
+                        name=f'{triggerType.name}-{resultType.name}', triggerName=triggerType.name,
+                        triggerSeed=protoEffect.trigger_seed, resultName=resultType.name,
+                        resultSeed=protoEffect.result_seed)
+        card.effects.append(effect)

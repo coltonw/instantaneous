@@ -17,10 +17,10 @@ message DeckResult {
     int32 losses = 3;
     int32 rank = 4;
     float percentile = 5;
-    int simple_iron = 6;
-    int simple_crystal = 7;
-    int simple_iron_winner = 8;
-    int simple_crystal_winner = 9;
+    int32 simple_iron = 6;
+    int32 simple_crystal = 7;
+    int32 simple_iron_winner = 8;
+    int32 simple_crystal_winner = 9;
 }
 
 // This card is for describing all displayable information to the client so that they can show the card to the user.

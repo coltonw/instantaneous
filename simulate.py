@@ -61,7 +61,7 @@ if sims == 1:
     verbose = True
 pool = Pool()
 
-for simWins, simGamesPlayed, simEffects in pool.imap_unordered(multiSim, range(sims)):
+for simWins, simGamesPlayed, simEffects, _ in pool.imap_unordered(multiSim, range(sims)):
     wins = combineDictOfInts(wins, simWins)
     highestWins = combineHighestWins(highestWins, simWins)
     effects = combineDictOfInts(effects, simEffects)

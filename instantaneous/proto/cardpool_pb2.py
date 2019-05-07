@@ -7,7 +7,6 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-from google.protobuf import descriptor_pb2
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
@@ -19,9 +18,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='instantaneous/proto/cardpool.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\"instantaneous/proto/cardpool.proto\"?\n\x08\x43\x61rdPool\x12\n\n\x02id\x18\x01 \x01(\t\x12\x14\n\x05\x63\x61rds\x18\x02 \x03(\x0b\x32\x05.Card\x12\x11\n\tdeck_size\x18\x03 \x01(\x05\")\n\x04\x44\x65\x63k\x12\x0f\n\x07pool_id\x18\x01 \x01(\t\x12\x10\n\x08\x63\x61rd_ids\x18\x02 \x03(\x05\"^\n\nDeckResult\x12\x10\n\x08win_rate\x18\x01 \x01(\x02\x12\x0c\n\x04wins\x18\x02 \x01(\x05\x12\x0e\n\x06losses\x18\x03 \x01(\x05\x12\x0c\n\x04rank\x18\x04 \x01(\x05\x12\x12\n\npercentile\x18\x05 \x01(\x02\"\xea\x03\n\x04\x43\x61rd\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x16\n\x0estone_strength\x18\x02 \x01(\x05\x12\x15\n\riron_strength\x18\x03 \x01(\x05\x12\x18\n\x10\x63rystal_strength\x18\x04 \x01(\x05\x12\x16\n\x03\x61ge\x18\x05 \x01(\x0e\x32\t.Card.Age\x12\x18\n\x04race\x18\x06 \x01(\x0e\x32\n.Card.Race\x12\x1e\n\x04prof\x18\x07 \x01(\x0e\x32\x10.Card.Profession\x12\x0c\n\x04\x64\x65sc\x18\x08 \x01(\t\x12 \n\x0crace_synergy\x18\t \x01(\x0e\x32\n.Card.Race\x12&\n\x0cprof_synergy\x18\n \x01(\x0e\x32\x10.Card.Profession\"5\n\x03\x41ge\x12\x0c\n\x08NONE_AGE\x10\x00\x12\t\n\x05STONE\x10\x01\x12\x08\n\x04IRON\x10\x02\x12\x0b\n\x07\x43RYSTAL\x10\x03\":\n\x04Race\x12\r\n\tNONE_RACE\x10\x00\x12\x0c\n\x08\x42\x45\x41STMAN\x10\x01\x12\t\n\x05HUMAN\x10\x02\x12\n\n\x06UNDEAD\x10\x03\"p\n\nProfession\x12\r\n\tNONE_PROF\x10\x00\x12\r\n\tALCHEMIST\x10\x01\x12\x0e\n\nBATTLETECH\x10\x02\x12\x0c\n\x08\x43ONJUROR\x10\x03\x12\x0b\n\x07PROPHET\x10\x04\x12\x0c\n\x08WOODSMAN\x10\x05\x12\x0b\n\x07PEASANT\x10\x06\x62\x06proto3')
+  serialized_options=None,
+  serialized_pb=_b('\n\"instantaneous/proto/cardpool.proto\"?\n\x08\x43\x61rdPool\x12\n\n\x02id\x18\x01 \x01(\t\x12\x14\n\x05\x63\x61rds\x18\x02 \x03(\x0b\x32\x05.Card\x12\x11\n\tdeck_size\x18\x03 \x01(\x05\")\n\x04\x44\x65\x63k\x12\x0f\n\x07pool_id\x18\x01 \x01(\t\x12\x10\n\x08\x63\x61rd_ids\x18\x02 \x03(\x05\"\xc6\x01\n\nDeckResult\x12\x10\n\x08win_rate\x18\x01 \x01(\x02\x12\x0c\n\x04wins\x18\x02 \x01(\x05\x12\x0e\n\x06losses\x18\x03 \x01(\x05\x12\x0c\n\x04rank\x18\x04 \x01(\x05\x12\x12\n\npercentile\x18\x05 \x01(\x02\x12\x13\n\x0bsimple_iron\x18\x06 \x01(\x05\x12\x16\n\x0esimple_crystal\x18\x07 \x01(\x05\x12\x1a\n\x12simple_iron_winner\x18\x08 \x01(\x05\x12\x1d\n\x15simple_crystal_winner\x18\t \x01(\x05\"\xd3\x03\n\x04\x43\x61rd\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x15\n\riron_strength\x18\x03 \x01(\x05\x12\x18\n\x10\x63rystal_strength\x18\x04 \x01(\x05\x12\x16\n\x03\x61ge\x18\x05 \x01(\x0e\x32\t.Card.Age\x12\x18\n\x04race\x18\x06 \x01(\x0e\x32\n.Card.Race\x12\x1e\n\x04prof\x18\x07 \x01(\x0e\x32\x10.Card.Profession\x12\x0c\n\x04\x64\x65sc\x18\x08 \x01(\t\x12 \n\x0crace_synergy\x18\t \x01(\x0e\x32\n.Card.Race\x12&\n\x0cprof_synergy\x18\n \x01(\x0e\x32\x10.Card.Profession\"0\n\x03\x41ge\x12\x0c\n\x08NONE_AGE\x10\x00\x12\x08\n\x04IRON\x10\x02\x12\x0b\n\x07\x43RYSTAL\x10\x03\"\x04\x08\x01\x10\x01\":\n\x04Race\x12\r\n\tNONE_RACE\x10\x00\x12\x0c\n\x08\x42\x45\x41STMAN\x10\x01\x12\t\n\x05HUMAN\x10\x02\x12\n\n\x06UNDEAD\x10\x03\"p\n\nProfession\x12\r\n\tNONE_PROF\x10\x00\x12\r\n\tALCHEMIST\x10\x01\x12\x0e\n\nBATTLETECH\x10\x02\x12\x0c\n\x08\x43ONJUROR\x10\x03\x12\x0b\n\x07PROPHET\x10\x04\x12\x0c\n\x08WOODSMAN\x10\x05\x12\x0b\n\x07PEASANT\x10\x06J\x04\x08\x02\x10\x03\x62\x06proto3')
 )
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
@@ -33,25 +32,21 @@ _CARD_AGE = _descriptor.EnumDescriptor(
   values=[
     _descriptor.EnumValueDescriptor(
       name='NONE_AGE', index=0, number=0,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='STONE', index=1, number=1,
-      options=None,
+      name='IRON', index=1, number=2,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='IRON', index=2, number=2,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='CRYSTAL', index=3, number=3,
-      options=None,
+      name='CRYSTAL', index=2, number=3,
+      serialized_options=None,
       type=None),
   ],
   containing_type=None,
-  options=None,
-  serialized_start=506,
-  serialized_end=559,
+  serialized_options=None,
+  serialized_start=587,
+  serialized_end=635,
 )
 _sym_db.RegisterEnumDescriptor(_CARD_AGE)
 
@@ -63,25 +58,25 @@ _CARD_RACE = _descriptor.EnumDescriptor(
   values=[
     _descriptor.EnumValueDescriptor(
       name='NONE_RACE', index=0, number=0,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='BEASTMAN', index=1, number=1,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='HUMAN', index=2, number=2,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='UNDEAD', index=3, number=3,
-      options=None,
+      serialized_options=None,
       type=None),
   ],
   containing_type=None,
-  options=None,
-  serialized_start=561,
-  serialized_end=619,
+  serialized_options=None,
+  serialized_start=637,
+  serialized_end=695,
 )
 _sym_db.RegisterEnumDescriptor(_CARD_RACE)
 
@@ -93,37 +88,37 @@ _CARD_PROFESSION = _descriptor.EnumDescriptor(
   values=[
     _descriptor.EnumValueDescriptor(
       name='NONE_PROF', index=0, number=0,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='ALCHEMIST', index=1, number=1,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='BATTLETECH', index=2, number=2,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='CONJUROR', index=3, number=3,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='PROPHET', index=4, number=4,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='WOODSMAN', index=5, number=5,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='PEASANT', index=6, number=6,
-      options=None,
+      serialized_options=None,
       type=None),
   ],
   containing_type=None,
-  options=None,
-  serialized_start=621,
-  serialized_end=733,
+  serialized_options=None,
+  serialized_start=697,
+  serialized_end=809,
 )
 _sym_db.RegisterEnumDescriptor(_CARD_PROFESSION)
 
@@ -141,28 +136,28 @@ _CARDPOOL = _descriptor.Descriptor(
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='cards', full_name='CardPool.cards', index=1,
       number=2, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='deck_size', full_name='CardPool.deck_size', index=2,
       number=3, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  options=None,
+  serialized_options=None,
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
@@ -186,21 +181,21 @@ _DECK = _descriptor.Descriptor(
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='card_ids', full_name='Deck.card_ids', index=1,
       number=2, type=5, cpp_type=1, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  options=None,
+  serialized_options=None,
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
@@ -224,49 +219,77 @@ _DECKRESULT = _descriptor.Descriptor(
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='wins', full_name='DeckResult.wins', index=1,
       number=2, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='losses', full_name='DeckResult.losses', index=2,
       number=3, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='rank', full_name='DeckResult.rank', index=3,
       number=4, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='percentile', full_name='DeckResult.percentile', index=4,
       number=5, type=2, cpp_type=6, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='simple_iron', full_name='DeckResult.simple_iron', index=5,
+      number=6, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='simple_crystal', full_name='DeckResult.simple_crystal', index=6,
+      number=7, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='simple_iron_winner', full_name='DeckResult.simple_iron_winner', index=7,
+      number=8, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='simple_crystal_winner', full_name='DeckResult.simple_crystal_winner', index=8,
+      number=9, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  options=None,
+  serialized_options=None,
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=146,
-  serialized_end=240,
+  serialized_start=147,
+  serialized_end=345,
 )
 
 
@@ -283,70 +306,63 @@ _CARD = _descriptor.Descriptor(
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='stone_strength', full_name='Card.stone_strength', index=1,
-      number=2, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='iron_strength', full_name='Card.iron_strength', index=2,
+      name='iron_strength', full_name='Card.iron_strength', index=1,
       number=3, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='crystal_strength', full_name='Card.crystal_strength', index=3,
+      name='crystal_strength', full_name='Card.crystal_strength', index=2,
       number=4, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='age', full_name='Card.age', index=4,
+      name='age', full_name='Card.age', index=3,
       number=5, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='race', full_name='Card.race', index=5,
+      name='race', full_name='Card.race', index=4,
       number=6, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='prof', full_name='Card.prof', index=6,
+      name='prof', full_name='Card.prof', index=5,
       number=7, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='desc', full_name='Card.desc', index=7,
+      name='desc', full_name='Card.desc', index=6,
       number=8, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='race_synergy', full_name='Card.race_synergy', index=8,
+      name='race_synergy', full_name='Card.race_synergy', index=7,
       number=9, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='prof_synergy', full_name='Card.prof_synergy', index=9,
+      name='prof_synergy', full_name='Card.prof_synergy', index=8,
       number=10, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -356,14 +372,14 @@ _CARD = _descriptor.Descriptor(
     _CARD_RACE,
     _CARD_PROFESSION,
   ],
-  options=None,
+  serialized_options=None,
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=243,
-  serialized_end=733,
+  serialized_start=348,
+  serialized_end=815,
 )
 
 _CARDPOOL.fields_by_name['cards'].message_type = _CARD
@@ -379,6 +395,7 @@ DESCRIPTOR.message_types_by_name['CardPool'] = _CARDPOOL
 DESCRIPTOR.message_types_by_name['Deck'] = _DECK
 DESCRIPTOR.message_types_by_name['DeckResult'] = _DECKRESULT
 DESCRIPTOR.message_types_by_name['Card'] = _CARD
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 CardPool = _reflection.GeneratedProtocolMessageType('CardPool', (_message.Message,), dict(
   DESCRIPTOR = _CARDPOOL,

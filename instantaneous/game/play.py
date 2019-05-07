@@ -100,19 +100,33 @@ def play(yourDeckProto, pool):
         for card in pool:
             if card.cardId == deckCardId:
                 yourDeck.append(card)
-    (wins, gamesPlayed, _) = simulate({}, 0, yourDeck=yourDeck, verbose=True, pool=pool)
+    (wins, gamesPlayed, _, decks) = simulate({}, 0, yourDeck=yourDeck, verbose=True, pool=pool)
     result = cardpool_pb2.DeckResult()
     result.wins = wins['YOU']
     # right now, a tie is a loss
     result.losses = gamesPlayed - wins['YOU']
     result.win_rate = wins['YOU'] / gamesPlayed
     rank = 1
-    for enemyWins in wins.values():
+    winner = 'YOU'
+    mostWins = wins['YOU']
+    for enemy, enemyWins in wins.items():
         if enemyWins > wins['YOU']:
             rank = rank + 1
+        if enemyWins > mostWins:
+            # there may be multiple tied but we assume that is not important to us here
+            winner = enemy
+            mostWins = enemyWins
+
     result.rank = rank
     # double check this math
     result.percentile = (len(wins) - rank + 1) / len(wins)
+    simple_deck_strength(decks['YOU'])
+    result.simple_iron = decks['YOU']['simple']['total'][0]
+    result.simple_crystal = decks['YOU']['simple']['total'][1]
+
+    simple_deck_strength(decks[winner])
+    result.simple_iron_winner = decks[winner]['simple']['total'][0]
+    result.simple_crystal_winner = decks[winner]['simple']['total'][1]
     return result
 
 
@@ -212,4 +226,4 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None, monte=F
         for effect in decks[bestDeck][p]['effects']:
             effects[effect.name] = effects.get(effect.name, 0)
             effects[effect.name] = effects[effect.name] + 1
-    return (wins, gamesPlayed, effects)
+    return (wins, gamesPlayed, effects, decks)

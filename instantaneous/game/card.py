@@ -4,6 +4,7 @@ import random
 import sys
 import copy
 from functools import reduce
+import uuid
 
 from instantaneous.game.constants import (Age, Profession, Race, Phase, Mod, Special, USEFUL_PROFS, BASE_STRENGTH,
                                           POWER_ADVANTAGE,
@@ -21,8 +22,10 @@ class Card:
     cardId = 1
 
     def __init__(self, strength, age, race, prof, desc='', mod=Mod.NORMAL,
-                 synergy=None, effects=None, cardId=None):
-        if cardId is None:
+                 synergy=None, effects=None, cardId=None, useUuid=False):
+        if cardId is None and useUuid:
+            self.cardId = uuid.uuid4()
+        elif cardId is None and not useUuid:
             self.cardId = Card.cardId
             Card.cardId += 1
         else:
@@ -480,10 +483,26 @@ def hydrate_ultrastrong_lowstart_result(card):
     return Result(f"gain {valueStr} strength", apply=apply, starting_str=starting_str)
 
 
+def hydrate_verystrong_spawn_result(card):
+    # not needed here but sometimes is needed
+    # rand = random.Random(card.resultSeed)
+
+    value = POWER_ADVANTAGE[2]
+    valueStr = str(value)
+
+    def apply(self, deck, oppDeck):
+        spawn = Card([0, value], Age.CRYSTAL, card.race, card.prof, useUuid=True)
+        deck[spawn.cardId] = spawn
+        deck['total'][1] += value
+
+    return Result(f"create a 0 | {valueStr} {card.prof.name.capitalize()} {card.race.name.capitalize()}", apply=apply)
+
+
 resultTypes = [
     ResultType("strong", hydrate_strong_result, complexity=0),
     ResultType("verystrong", hydrate_verystrong_result, power=2, complexity=0),
-    ResultType("ultrastrong_lowstart", hydrate_ultrastrong_lowstart_result, power=3)
+    ResultType("ultrastrong_lowstart", hydrate_ultrastrong_lowstart_result, power=3),
+    ResultType("verystrong_spawn", hydrate_verystrong_spawn_result, power=2)
 ]
 
 

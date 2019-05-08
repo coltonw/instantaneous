@@ -90,6 +90,7 @@ def mod_count(mod, pool):
     return reduce(lambda acc, card: acc + (card.mod == mod), pool, 0)
 
 
+# TODO: convert to effect breakdown?
 def mod_breakdown(pool):
     return f'(strong={mod_count(Mod.STRONG, pool)};easy={mod_count(Mod.EASY_MATCHING_SYNERGY, pool) + mod_count(Mod.EASY_NONMATCHING_SYNERGY, pool)})'
 
@@ -100,7 +101,13 @@ def play(yourDeckProto, pool):
         for card in pool:
             if card.cardId == deckCardId:
                 yourDeck.append(card)
-    (wins, gamesPlayed, _, decks) = simulate({}, 0, yourDeck=yourDeck, verbose=True, pool=pool)
+    if len(yourDeck) != DECK_SIZE:
+        raise ValueError("Your deck is the wrong size")
+    display_cards(yourDeck)
+    decks = generate_ai_decks(pool)
+    decks['YOU'] = to_metadata(yourDeck)
+
+    (wins, gamesPlayed, stats) = run_matches(decks, verbose=True)
     result = cardpool_pb2.DeckResult()
     result.wins = wins['YOU']
     # right now, a tie is a loss
@@ -130,27 +137,52 @@ def play(yourDeckProto, pool):
     return result
 
 
-def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None, monte=False):
-    if not pool:
-        pool = generate_pool()
-    if verbose:
-        # this is perhaps TOO verbose
-        # display_cards(pool)
-        print(mod_breakdown(pool))
+def run_matches(decks, verbose=False):
+    wins = {}
+
+    deckKeys = list(decks.keys())
+    for i in range(len(deckKeys) - 1):
+        name1 = deckKeys[i]
+        deck1 = decks[name1]
+        wins[name1] = wins.get(name1, 0)
+        for j in range(i + 1, len(deckKeys)):
+            name2 = deckKeys[j]
+            deck2 = decks[name2]
+            wins[name2] = wins.get(name2, 0)
+            m = match(deck1, deck2)
+            if m > 0:
+                wins[name1] = wins[name1] + 1
+            if m < 0:
+                wins[name2] = wins[name2] + 1
+            if name1 == 'YOU':
+                print(f'{name1} vs {name2}: {m}')
+
+    # gamesPlayed is the number of games played by each deck
+    gamesPlayed = len(deckKeys) - 1
+    effects = {}
+    bestDeck = deckKeys[0]
+    for name, deck in decks.items():
+        if wins[name] > wins[bestDeck]:
+            bestDeck = name
+        if verbose:
+            # TODO: fix this once I fix deck summary
+            # print('{0}{1}'.format(name1, deck_summary(deck1)))
+            simpleStr = simple_deck_strength(deck)
+            print('{0} {1} {2}'.format(name, deck['simple']['total'], simpleStr))
+    for p in Phase:
+        for effect in decks[bestDeck][p]['effects']:
+            effects[effect.name] = effects.get(effect.name, 0)
+            effects[effect.name] = effects[effect.name] + 1
+
+    stats = {'effects': effects}
+    return (wins, gamesPlayed, stats)
+
+
+def generate_ai_decks(pool, monte=False):
     decks = {}
-    if yourDeck is not None:
-        if len(yourDeck) != DECK_SIZE:
-            raise ValueError("Your deck is the wrong size")
-        decks['YOU'] = yourDeck
-        display_cards(decks['YOU'])
     decks['even'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.EVEN)])
     decks['ironOnly'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.IRON)])
     decks['crystalOnly'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.CRYSTAL)])
-    decks['4iron'] = ai.build_deck(pool, [
-        ai.breakdown_strat(ai.Breakdown.IRON),
-        ai.fill_strat(4),
-        ai.breakdown_strat(ai.Breakdown.CRYSTAL)
-    ])
     decks['maxHard'] = ai.build_deck(pool, [ai.max_hard_synergy_strat()])
     decks['ironMaxHard'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.IRON), ai.max_hard_synergy_strat()])
     decks['maxHardIron'] = ai.build_deck(pool, [ai.max_hard_synergy_strat(), ai.breakdown_strat(ai.Breakdown.IRON)])
@@ -161,21 +193,39 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None, monte=F
         decks[f'{prof.name.lower()}HardSynergy'] = ai.build_deck(pool, [ai.hard_synergy_strat(prof)])
 
     decks['strongIron'] = ai.build_deck(pool, [ai.strong_strat(), ai.breakdown_strat(ai.Breakdown.IRON)])
-    decks['15Iron'] = ai.build_deck(pool, [
-        ai.breakdown_strat(ai.Breakdown.IRON),
-        ai.fill_strat(15),
-        ai.breakdown_strat(ai.Breakdown.CRYSTAL)
-    ])
     decks['ironLopsided'] = ai.build_deck(pool, [
         ai.breakdown_strat(ai.Breakdown.IRON),
         ai.strong_strat(),
-        ai.lopsided_fill_strat(12),
+        ai.lopsided_fill_strat(10),
         ai.easy_synergy_strat()
     ])
-    decks['18Iron'] = ai.build_deck(pool, [
+    decks['lopsided'] = ai.build_deck(pool, [
+        ai.strong_strat(),
+        ai.lopsided_fill_strat(10),
+        ai.easy_synergy_strat()
+    ])
+    decks['4iron'] = ai.build_deck(pool, [
         ai.breakdown_strat(ai.Breakdown.IRON),
-        ai.fill_strat(18),
-        ai.breakdown_strat(ai.Breakdown.CRYSTAL)
+        ai.trigger_strat('defender'),
+        ai.trigger_strat('close_defender'),
+        ai.fill_to_strat(4),
+        ai.breakdown_strat(ai.Breakdown.CRYSTAL),
+        ai.trigger_strat('defender'),
+        ai.trigger_strat('close_defender')
+    ])
+    decks['8Iron'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.IRON),
+        ai.trigger_strat('close_defender'),
+        ai.fill_to_strat(8),
+        ai.breakdown_strat(ai.Breakdown.CRYSTAL),
+        ai.trigger_strat('close_defender')
+    ])
+    decks['12Iron'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.IRON),
+        ai.trigger_strat('attacker'),
+        ai.fill_to_strat(12),
+        ai.breakdown_strat(ai.Breakdown.CRYSTAL),
+        ai.trigger_strat('attacker')
     ])
 
     decks['strong'] = ai.build_deck(pool, [])
@@ -195,35 +245,14 @@ def simulate(wins, gamesPlayed, yourDeck=None, verbose=False, pool=None, monte=F
         decks['monteCarlo'] = ai.monte_carlo_deck(pool, iterationLimit=6000)
         # decks['monteCarlo'] = ai.monte_carlo_deck(pool, timeLimit=8000)
 
-    deckKeys = list(decks.keys())
-    for i in range(len(deckKeys) - 1):
-        name1 = deckKeys[i]
-        deck1 = decks[name1]
-        wins[name1] = wins.get(name1, 0)
-        for j in range(i + 1, len(deckKeys)):
-            name2 = deckKeys[j]
-            deck2 = decks[name2]
-            wins[name2] = wins.get(name2, 0)
-            m = match(deck1, deck2)
-            if m > 0:
-                wins[name1] = wins[name1] + 1
-            if m < 0:
-                wins[name2] = wins[name2] + 1
-            if name1 == 'YOU':
-                print(f'{name1} vs {name2}: {m}')
-    gamesPlayed += len(decks) - 1
-    effects = {}
-    bestDeck = 'even'
-    for name, deck in decks.items():
-        if wins[name] > wins[bestDeck]:
-            bestDeck = name
-        if verbose:
-            # TODO: fix this once I fix deck summary
-            # print('{0}{1}'.format(name1, deck_summary(deck1)))
-            simpleStr = simple_deck_strength(deck)
-            print('{0} {1} {2}'.format(name, deck['simple']['total'], simpleStr))
-    for p in Phase:
-        for effect in decks[bestDeck][p]['effects']:
-            effects[effect.name] = effects.get(effect.name, 0)
-            effects[effect.name] = effects[effect.name] + 1
-    return (wins, gamesPlayed, effects, decks)
+    return decks
+
+
+def simulate(verbose=False, monte=False):
+    pool = generate_pool()
+    if verbose:
+        # this is perhaps TOO verbose
+        # display_cards(pool)
+        print(mod_breakdown(pool))
+    decks = generate_ai_decks(pool)
+    return run_matches(decks, verbose=verbose)

@@ -2,7 +2,6 @@ import sys
 import datetime
 from multiprocessing import Pool
 from instantaneous.game.play import simulate
-from instantaneous.game import match
 
 
 verbose = False
@@ -11,7 +10,7 @@ monte = False
 
 def multiSim(idx):
     global verbose
-    return simulate({}, 0, verbose=verbose, monte=monte)
+    return simulate(verbose=verbose, monte=monte)
 
 
 def combineDictOfInts(d1, d2):
@@ -61,10 +60,10 @@ if sims == 1:
     verbose = True
 pool = Pool()
 
-for simWins, simGamesPlayed, simEffects, _ in pool.imap_unordered(multiSim, range(sims)):
+for simWins, simGamesPlayed, simStats in pool.imap_unordered(multiSim, range(sims)):
     wins = combineDictOfInts(wins, simWins)
     highestWins = combineHighestWins(highestWins, simWins)
-    effects = combineDictOfInts(effects, simEffects)
+    effects = combineDictOfInts(effects, simStats['effects'])
     gamesPlayed += simGamesPlayed
 
 endTime = datetime.datetime.now()
@@ -93,11 +92,11 @@ for effectName, count in effects.items():
 effectPct = sorted(effectPct, key=lambda t: t[1], reverse=True)
 
 print()
-for name, pct in winPct:
-    print('{0} win%: {1:.0f}'.format(name, pct))
+for name, pct in effectPct:
+    print('{0} pick ratio: {1:.2f}'.format(name, pct))
 print()
 for name, pct in highestWinPct:
     print('{0} best in pool %: {1:.1f}'.format(name, pct))
 print()
-for name, pct in effectPct:
-    print('{0} pick ratio: {1:.2f}'.format(name, pct))
+for name, pct in winPct:
+    print('{0} win%: {1:.0f}'.format(name, pct))

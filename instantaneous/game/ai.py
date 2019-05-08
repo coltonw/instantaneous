@@ -148,6 +148,12 @@ def special_strat():
     return strat
 
 
+def trigger_strat(triggerName):
+    def strat(pool, deckMap, breakdown, ageCounts):
+        return _apply_filter_strat(pool, deckMap, lambda c: len(c.effects) > 0 and c.effects[0].triggerName == triggerName, breakdown, ageCounts)
+    return strat
+
+
 def easy_synergy_strat(breakout=False):
     # this strat only makes sense as a follow-up strategy after others
     def strat(pool, deckMap, breakdown, ageCounts):

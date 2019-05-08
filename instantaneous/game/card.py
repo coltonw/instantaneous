@@ -433,7 +433,7 @@ triggerTypes = [
     TriggerType("hard_diversity", hydrate_hard_diversity_trigger, difficulty=2),
     TriggerType("attacker", hydrate_attacker_trigger, phases={Phase.RESULT}, interactive=True),
     TriggerType("defender", hydrate_defender_trigger, phases={Phase.RESULT}, interactive=True),
-    TriggerType("close_ defender", hydrate_close_defender_trigger,
+    TriggerType("close_defender", hydrate_close_defender_trigger,
                 phases={Phase.RESULT}, difficulty=2, interactive=True)
 ]
 

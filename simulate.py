@@ -63,7 +63,8 @@ pool = Pool()
 for simWins, simGamesPlayed, simStats in pool.imap_unordered(multiSim, range(sims)):
     wins = combineDictOfInts(wins, simWins)
     highestWins = combineHighestWins(highestWins, simWins)
-    effects = combineDictOfInts(effects, simStats['effects'])
+    # effects = combineDictOfInts(effects, simStats['effects'])
+    effects = combineDictOfInts(effects, simStats['triggers'])
     gamesPlayed += simGamesPlayed
 
 endTime = datetime.datetime.now()

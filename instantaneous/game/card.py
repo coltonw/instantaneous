@@ -443,6 +443,9 @@ triggerTypes = [
 ###########
 
 
+# TODO: Results should mostly be variable with maybe a minPower but can take a power input
+
+
 def hydrate_strong_result(card):
     # not needed here but sometimes is needed
     # rand = random.Random(card.resultSeed)

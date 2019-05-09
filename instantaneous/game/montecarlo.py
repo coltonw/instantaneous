@@ -36,7 +36,7 @@ class mcts():
             self.timeLimit = timeLimit
             self.limitType = 'time'
         else:
-            if iterationLimit == None:
+            if iterationLimit is None:
                 raise ValueError("Must have either a time limit or an iteration limit")
             # number of iterations of the search
             if iterationLimit < 1:
@@ -134,7 +134,9 @@ class mcts():
                 bestStates = [child.bestTerminalState]
             elif child.bestReward == bestValue:
                 bestStates.append(child.bestTerminalState)
-        return random.choice(bestStates)
+        if len(bestStates) > 0:
+            return random.choice(bestStates)
+        return None
 
     def getAction(self, root, bestChild):
         for action, node in root.children.items():

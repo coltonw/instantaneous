@@ -331,15 +331,15 @@ class DeckBuildingState():
         else:
             raise ValueError('Must have basePool or poolMap')
 
-        if poolOptions is not None:
-            self.poolOptions = poolOptions
-        else:
-            self.poolOptions = set(self.poolMap.keys())
-
         if cardIdSet is not None:
             self.cardIdSet = cardIdSet
         else:
             self.cardIdSet = set()
+
+        if poolOptions is not None:
+            self.poolOptions = poolOptions
+        else:
+            self.poolOptions = set(self.poolMap.keys()) - self.cardIdSet
 
     def getPossibleActions(self):
         return tuple(self.poolOptions)
@@ -350,7 +350,7 @@ class DeckBuildingState():
         return DeckBuildingState(poolMap=self.poolMap, poolOptions=newPoolOptions, cardIdSet=newCardIdSet)
 
     def isTerminal(self):
-        return len(self.cardIdSet) == DECK_SIZE
+        return len(self.cardIdSet) >= DECK_SIZE
 
     def getReward(self):
         # only needed for terminal states
@@ -364,9 +364,24 @@ class DeckBuildingState():
         return self.cardIdSet == other.cardIdSet
 
 
-def monte_carlo_deck(basePool, iterationLimit=None, timeLimit=None):
+def monte_carlo_deck(basePool, iterationLimit=None, timeLimit=None, quick=False):
     if iterationLimit is None and timeLimit is None:
         iterationLimit = 1000
     treeSearch = mcts(iterationLimit=iterationLimit, timeLimit=timeLimit)
-    terminalState = treeSearch.search_terminal_state(DeckBuildingState(basePool=basePool))
-    return terminalState.deckMetadata
+    # there may technically be perfect decks removed by doing this but they would be super rare so
+    # I think it is worth the performance boost
+    poolMap = {c.cardId: c for c in basePool if c.mod is not Mod.WEAK and c.mod is not Mod.COUNTER}
+    cardIdSet = None
+    if quick:
+        quickPoolMap = {c.cardId: c for c in basePool
+                        if c.mod is not Mod.WEAK and c.mod is not Mod.COUNTER and c.mod is not Mod.NORMAL}
+        if len(quickPoolMap) >= DECK_SIZE:
+            poolMap = quickPoolMap
+        strongList = [c.cardId for c in basePool if c.mod is Mod.STRONG]
+        cardIdSet = set(strongList[:DECK_SIZE])
+
+    startingState = DeckBuildingState(basePool=basePool, poolMap=poolMap, cardIdSet=cardIdSet)
+    terminalState = treeSearch.search_terminal_state(startingState)
+    if terminalState is not None:
+        return terminalState.deckMetadata
+    return None

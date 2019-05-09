@@ -160,6 +160,7 @@ def run_matches(decks, verbose=False):
     # gamesPlayed is the number of games played by each deck
     gamesPlayed = len(deckKeys) - 1
     effects = {}
+    triggers = {}
     bestDeck = deckKeys[0]
     for name, deck in decks.items():
         if wins[name] > wins[bestDeck]:
@@ -172,17 +173,15 @@ def run_matches(decks, verbose=False):
     for p in Phase:
         for effect in decks[bestDeck][p]['effects']:
             effects[effect.name] = effects.get(effect.name, 0)
-            effects[effect.name] = effects[effect.name] + 1
+            triggers[effect.triggerName] = triggers.get(effect.triggerName, 0)
+            triggers[effect.triggerName] = triggers[effect.triggerName] + 1
 
-    stats = {'effects': effects}
+    stats = {'effects': effects, 'triggers': triggers}
     return (wins, gamesPlayed, stats)
 
 
 def generate_ai_decks(pool, monte=False):
     decks = {}
-    decks['even'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.EVEN)])
-    decks['ironOnly'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.IRON)])
-    decks['crystalOnly'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.CRYSTAL)])
     decks['maxHard'] = ai.build_deck(pool, [ai.max_hard_synergy_strat()])
     decks['ironMaxHard'] = ai.build_deck(pool, [ai.breakdown_strat(ai.Breakdown.IRON), ai.max_hard_synergy_strat()])
     decks['maxHardIron'] = ai.build_deck(pool, [ai.max_hard_synergy_strat(), ai.breakdown_strat(ai.Breakdown.IRON)])
@@ -204,6 +203,13 @@ def generate_ai_decks(pool, monte=False):
         ai.lopsided_fill_strat(10),
         ai.easy_synergy_strat()
     ])
+
+    # various breakdowns
+    decks['crystalOnly'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.CRYSTAL),
+        ai.trigger_strat('defender'),
+        ai.trigger_strat('close_defender')
+    ])
     decks['4iron'] = ai.build_deck(pool, [
         ai.breakdown_strat(ai.Breakdown.IRON),
         ai.trigger_strat('defender'),
@@ -213,11 +219,8 @@ def generate_ai_decks(pool, monte=False):
         ai.trigger_strat('defender'),
         ai.trigger_strat('close_defender')
     ])
-    decks['8Iron'] = ai.build_deck(pool, [
-        ai.breakdown_strat(ai.Breakdown.IRON),
-        ai.trigger_strat('close_defender'),
-        ai.fill_to_strat(8),
-        ai.breakdown_strat(ai.Breakdown.CRYSTAL),
+    decks['even'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.EVEN),
         ai.trigger_strat('close_defender')
     ])
     decks['12Iron'] = ai.build_deck(pool, [
@@ -225,6 +228,10 @@ def generate_ai_decks(pool, monte=False):
         ai.trigger_strat('attacker'),
         ai.fill_to_strat(12),
         ai.breakdown_strat(ai.Breakdown.CRYSTAL),
+        ai.trigger_strat('attacker')
+    ])
+    decks['ironOnly'] = ai.build_deck(pool, [
+        ai.breakdown_strat(ai.Breakdown.IRON),
         ai.trigger_strat('attacker')
     ])
 
@@ -239,11 +246,19 @@ def generate_ai_decks(pool, monte=False):
 
     # the following ai return deckMetadata directly
 
-    # Monte Carlo is super slow compared to other ai so they are disabled unless running simulations
-    # or 6000 rounds (around 8 seconds) seems to be the right number for best results
+    decks['ultraQuickMonteCarlo'] = ai.monte_carlo_deck(pool, timeLimit=60, quick=True)
+
+    # Monte Carlo is super slow compared to other ai so they are disabled unless specifically enabled by the
+    # monte command line argument
     if monte:
-        decks['monteCarlo'] = ai.monte_carlo_deck(pool, iterationLimit=6000)
-        # decks['monteCarlo'] = ai.monte_carlo_deck(pool, timeLimit=8000)
+        decks['monteCarlo'] = ai.monte_carlo_deck(pool, timeLimit=4000)
+        decks['quickMonteCarlo'] = ai.monte_carlo_deck(pool, timeLimit=4000, quick=True)
+        # decks['monteCarlo'] = ai.monte_carlo_deck(pool, iterationLimit=6000)
+
+    # cleanup any ai that failed to produce a deck
+    for name in list(decks):
+        if decks[name] is None:
+            del decks[name]
 
     return decks
 
@@ -254,5 +269,5 @@ def simulate(verbose=False, monte=False):
         # this is perhaps TOO verbose
         # display_cards(pool)
         print(mod_breakdown(pool))
-    decks = generate_ai_decks(pool)
+    decks = generate_ai_decks(pool, monte=monte)
     return run_matches(decks, verbose=verbose)

@@ -317,6 +317,7 @@ def hydrate_easy_synergy_trigger(card):
     else:
         card.mod = Mod.EASY_NONMATCHING_SYNERGY
         choices = set(Race) | set(USEFUL_PROFS) - set([card.race, card.prof])
+        # this -1 is a bit confusing while adding very little. Considering removing it
         threshold = -1
     synergy = rand.choice(list(choices))
     threshold += EASY_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else EASY_PROF_SYNERGY_THRESHOLD
@@ -338,6 +339,7 @@ def hydrate_hard_synergy_trigger(card):
     else:
         card.mod = Mod.HARD_NONMATCHING_SYNERGY
         choices = set(Race) | set(USEFUL_PROFS) - set([card.race, card.prof])
+        # this -1 is a bit confusing while adding very little. Considering removing it
         threshold = -1
     synergy = rand.choice(list(choices))
     threshold += HARD_RACE_SYNERGY_THRESHOLD if isinstance(synergy, Race) else HARD_PROF_SYNERGY_THRESHOLD
@@ -403,6 +405,20 @@ def hydrate_hard_diversity_trigger(card):
     return Trigger(f"you have at least {HARD_DIVERSITY_THRESHOLD} of every race", check)
 
 
+def hydrate_exact_synergy_trigger(card):
+    rand = random.Random(card.triggerSeed)
+    choices = list(Race) + USEFUL_PROFS
+    synergy = rand.choice(choices)
+    maxTarget = 3 if synergy is isinstance(card.synergy, Profession) else 5
+    target = rand.randint(1, maxTarget)
+    card.synergy = synergy
+
+    def check(self, deck, oppDeck):
+        return deck['count'][synergy] == target
+
+    return Trigger(f"you have exactly {target} {synergy.plural().capitalize() if target > 1 else synergy.name.capitalize()}", check)
+
+
 def hydrate_attacker_trigger(card):
     def check(self, deck, oppDeck):
         return deck['total'][0] > oppDeck['total'][0]
@@ -427,6 +443,7 @@ triggerTypes = [
     TriggerType("hard_synergy", hydrate_hard_synergy_trigger, difficulty=3),
     TriggerType("counter", hydrate_counter_trigger, difficulty=3, interactive=True),
     TriggerType("crystal_synergy", hydrate_crystal_synergy_trigger, difficulty=3),
+    TriggerType("exact_synergy", hydrate_exact_synergy_trigger, difficulty=2),
     TriggerType("variety", hydrate_variety_trigger),
     TriggerType("hard_variety", hydrate_hard_variety_trigger, difficulty=2),
     TriggerType("diversity", hydrate_diversity_trigger),
@@ -436,6 +453,10 @@ triggerTypes = [
     TriggerType("close_defender", hydrate_close_defender_trigger,
                 phases={Phase.RESULT}, difficulty=2, interactive=True)
 ]
+
+
+# TODO: complex triggers which have built in results as part of the trigger
+# e.g. Destroy all your Prophets. If at least 3 were destroyed, RESULT
 
 
 ###########

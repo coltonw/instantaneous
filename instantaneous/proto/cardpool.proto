@@ -9,6 +9,7 @@ message CardPool {
 message Deck {
     string pool_id = 1;
     repeated int32 card_ids = 2;
+    string player_id = 3;
 }
 
 message DeckResult {

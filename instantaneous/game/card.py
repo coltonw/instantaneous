@@ -25,7 +25,7 @@ class Card:
     def __init__(self, strength, age, race, prof, desc='', mod=Mod.NORMAL,
                  synergy=None, effects=None, cardId=None, useUuid=False):
         if cardId is None and useUuid:
-            self.cardId = uuid.uuid4()
+            self.cardId = str(uuid.uuid4())
         elif cardId is None and not useUuid:
             self.cardId = Card.cardId
             Card.cardId += 1
@@ -213,6 +213,10 @@ def pool_to_proto(pool, id='0'):
     protoPool.cards.extend(protoCards)
     protoPool.deck_size = DECK_SIZE
     return protoPool
+
+
+def pool_from_proto(protoPool):
+    return [card_from_proto(c) for c in protoPool.cards]
 
 
 class Effect:

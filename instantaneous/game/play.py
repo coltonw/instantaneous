@@ -97,27 +97,30 @@ def mod_breakdown(pool):
 
 def play(yourDeckProto, pool):
     yourDeck = []
+    # TODO: just convert the card_ids to a set?  makes this one loop instead of nested loops
     for deckCardId in yourDeckProto.card_ids:
         for card in pool:
             if card.cardId == deckCardId:
                 yourDeck.append(card)
     if len(yourDeck) != DECK_SIZE:
         raise ValueError("Your deck is the wrong size")
-    display_cards(yourDeck)
+    playerId = yourDeckProto.player_id
+    if playerId == "":
+        playerId = 'YOU'
     decks = generate_ai_decks(pool)
-    decks['YOU'] = to_metadata(yourDeck)
+    decks[playerId] = to_metadata(yourDeck)
 
-    (wins, gamesPlayed, stats) = run_matches(decks, verbose=True)
+    (wins, gamesPlayed, stats) = run_matches(decks, verbose=True, playerId=playerId)
     result = cardpool_pb2.DeckResult()
-    result.wins = wins['YOU']
+    result.wins = wins[playerId]
     # right now, a tie is a loss
-    result.losses = gamesPlayed - wins['YOU']
-    result.win_rate = wins['YOU'] / gamesPlayed
+    result.losses = gamesPlayed - wins[playerId]
+    result.win_rate = wins[playerId] / gamesPlayed
     rank = 1
-    winner = 'YOU'
-    mostWins = wins['YOU']
+    winner = playerId
+    mostWins = wins[playerId]
     for enemy, enemyWins in wins.items():
-        if enemyWins > wins['YOU']:
+        if enemyWins > wins[playerId]:
             rank = rank + 1
         if enemyWins > mostWins:
             # there may be multiple tied but we assume that is not important to us here
@@ -127,9 +130,9 @@ def play(yourDeckProto, pool):
     result.rank = rank
     # double check this math
     result.percentile = (len(wins) - rank + 1) / len(wins)
-    simple_deck_strength(decks['YOU'])
-    result.simple_iron = decks['YOU']['simple']['total'][0]
-    result.simple_crystal = decks['YOU']['simple']['total'][1]
+    simple_deck_strength(decks[playerId])
+    result.simple_iron = decks[playerId]['simple']['total'][0]
+    result.simple_crystal = decks[playerId]['simple']['total'][1]
 
     simple_deck_strength(decks[winner])
     result.simple_iron_winner = decks[winner]['simple']['total'][0]
@@ -137,7 +140,7 @@ def play(yourDeckProto, pool):
     return result
 
 
-def run_matches(decks, verbose=False):
+def run_matches(decks, verbose=False, playerId='YOU'):
     wins = {}
 
     deckKeys = list(decks.keys())
@@ -154,7 +157,7 @@ def run_matches(decks, verbose=False):
                 wins[name1] = wins[name1] + 1
             if m < 0:
                 wins[name2] = wins[name2] + 1
-            if name1 == 'YOU':
+            if name1 == playerId:
                 print(f'{name1} vs {name2}: {m}')
 
     # gamesPlayed is the number of games played by each deck

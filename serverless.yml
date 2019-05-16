@@ -1,0 +1,73 @@
+service: instantaneous-card-game
+
+frameworkVersion: ">=1.9.0 <2.0.0"
+
+plugins:
+  - serverless-python-requirements
+  - serverless-apigw-binary
+  - serverless-apigwy-binary
+
+provider:
+  name: aws
+  runtime: python3.6
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+
+functions:
+  new:
+    handler: handler.new_card_pool
+    events:
+      - http:
+          path: cardpool/new
+          method: post
+          contentHandling: CONVERT_TO_BINARY
+
+  get:
+    handler: handler.get
+    events:
+      - http:
+          path: cardpool/{id}
+          method: get
+          contentHandling: CONVERT_TO_BINARY
+
+  submit_deck:
+    handler: handler.submit_deck
+    events:
+      - http:
+          path: cardpool/{id}/submitdeck
+          method: post
+          contentHandling: CONVERT_TO_BINARY
+
+resources:
+  Resources:
+    TodosDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+
+custom:
+  apigwBinary:
+    types:
+      - 'application/x-protobuf'

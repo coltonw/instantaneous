@@ -1,5 +1,5 @@
 import copy
-from instantaneous.game.constants import Age, Profession, Race, Phase
+from icg.constants import Age, Profession, Race, Phase
 
 
 def simple_deck_strength(deckMetadata):

@@ -1,22 +1,19 @@
-from enum import Enum, auto
-from math import ceil
 import random
 import sys
 import copy
-from functools import reduce
 import uuid
 
-from instantaneous.game.constants import (Age, Profession, Race, Phase, Mod, Special, USEFUL_PROFS, BASE_STRENGTH,
-                                          POWER_ADVANTAGE,
-                                          EASY_PROF_SYNERGY_THRESHOLD, EASY_RACE_SYNERGY_THRESHOLD,
-                                          HARD_PROF_SYNERGY_THRESHOLD, HARD_RACE_SYNERGY_THRESHOLD,
-                                          PROF_COUNTER_THRESHOLD, RACE_COUNTER_THRESHOLD,
-                                          CRYSTAL_SYNERGY_THRESHOLD, HARD_VARIETY_THRESHOLD,
-                                          EASY_VARIETY_THRESHOLD, HARD_DIVERSITY_THRESHOLD,
-                                          EASY_DIVERSITY_THRESHOLD, DECK_SIZE, phase_from_proto,
-                                          age_from_proto, race_from_proto, prof_from_proto)
+from icg.constants import (Age, Profession, Race, Phase, Mod, Special, USEFUL_PROFS, BASE_STRENGTH,
+                           POWER_ADVANTAGE,
+                           EASY_PROF_SYNERGY_THRESHOLD, EASY_RACE_SYNERGY_THRESHOLD,
+                           HARD_PROF_SYNERGY_THRESHOLD, HARD_RACE_SYNERGY_THRESHOLD,
+                           PROF_COUNTER_THRESHOLD, RACE_COUNTER_THRESHOLD,
+                           CRYSTAL_SYNERGY_THRESHOLD, HARD_VARIETY_THRESHOLD,
+                           EASY_VARIETY_THRESHOLD, HARD_DIVERSITY_THRESHOLD,
+                           EASY_DIVERSITY_THRESHOLD, DECK_SIZE, phase_from_proto,
+                           age_from_proto, race_from_proto, prof_from_proto)
 
-from instantaneous.proto import cardpool_pb2
+from icg.proto import cardpool_pb2
 
 
 class Card:

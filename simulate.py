@@ -1,7 +1,7 @@
 import sys
 import datetime
 from multiprocessing import Pool
-from instantaneous.game.play import simulate
+from icg.play import simulate
 
 
 verbose = False

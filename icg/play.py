@@ -1,11 +1,11 @@
 import shutil
 from functools import reduce
 from textwrap import wrap
-from instantaneous.game.constants import Mod, Race, Phase, USEFUL_PROFS, DECK_SIZE
-from instantaneous.game.card import generate_pool
-from instantaneous.game.match import match, to_metadata, simple_deck_strength
-from instantaneous.game import ai
-from instantaneous.proto import cardpool_pb2
+from icg.constants import Mod, Race, Phase, USEFUL_PROFS, DECK_SIZE
+from icg.card import generate_pool
+from icg.match import match, to_metadata, simple_deck_strength
+from icg import ai
+from icg.proto import cardpool_pb2
 
 box = {
     'h': '─', 'v': '│',

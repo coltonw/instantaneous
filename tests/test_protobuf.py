@@ -1,5 +1,5 @@
-from instantaneous.game import card
-from instantaneous.proto import cardpool_pb2
+from icg import card
+from icg.proto import cardpool_pb2
 
 
 def test_card_to_proto():

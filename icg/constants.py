@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from instantaneous.proto import cardpool_pb2
+from icg.proto import cardpool_pb2
 
 
 class Age(Enum):

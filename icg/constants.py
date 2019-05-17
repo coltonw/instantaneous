@@ -137,9 +137,6 @@ BASE_STRENGTH = {
     Age.IRON: [4, 4],
     Age.CRYSTAL: [0, 7]
 }
-# power 0, 1, 2, 3
-# for iron age, these are split evenly so they must be even
-POWER_ADVANTAGE = [0, 2, 4, 6]
 
 
 USEFUL_PROFS = [prof for prof in list(Profession) if prof != Profession.PEASANT]

@@ -4,10 +4,13 @@ import uuid
 import os
 import time
 import base64
+import logging
 
 import boto3
 dynamodb = boto3.resource('dynamodb')
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 def new_card_pool(event, context):
     pool = card.generate_pool()
@@ -55,7 +58,9 @@ def get(event, context):
     )
 
     protoPool = cardpool_pb2.CardPool()
-    protoPool.ParseFromString(result['Item']['data'].data)
+    # data is returned as a Binary object which you can get the raw data from with .value
+    protoPool.ParseFromString(result['Item']['data'].value)
+    logger.info(f'Pool id: {protoPool.id}')
 
     # create a response
     response = {
@@ -63,8 +68,9 @@ def get(event, context):
         'headers': {
             'Content-Type': 'application/x-protobuf'
         },
+        'isBase64Encoded': True,
         # we are base64 encoding and then converting those bytes to a string object with .decode()
-        'body': base64.b64encode(result['Item']).decode()
+        'body': base64.b64encode(result['Item']['data'].value).decode()
     }
 
     return response
@@ -81,10 +87,13 @@ def submit_deck(event, context):
     )
 
     protoPool = cardpool_pb2.CardPool()
-    protoPool.ParseFromString(result['Item']['data'])
+    # data is returned as a Binary object which you can get the raw data from with .value
+    protoPool.ParseFromString(result['Item']['data'].value)
 
     cardPool = card.pool_from_proto(protoPool)
     data = event['body']
+    if event['isBase64Encoded']:
+        data = base64.b64decode(data)
     deck = cardpool_pb2.Deck()
     deck.ParseFromString(data)
     print(str(deck.card_ids))

@@ -50,9 +50,9 @@ functions:
 
 resources:
   Resources:
-    TodosDynamoDbTable:
+    IcgDynamoDbTable:
       Type: 'AWS::DynamoDB::Table'
-      DeletionPolicy: Retain
+      DeletionPolicy: Delete
       Properties:
         AttributeDefinitions:
           -

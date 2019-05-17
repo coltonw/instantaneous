@@ -2,6 +2,7 @@ import sys
 import datetime
 from multiprocessing import Pool
 from icg.play import simulate
+from icg import card
 
 
 verbose = False
@@ -88,8 +89,9 @@ for deckName, wins in highestWins.items():
 highestWinPct = sorted(highestWinPct, key=lambda t: t[1], reverse=True)
 
 effectPct = []
+triggerWeights = {tt.name: tt.weight for tt in card.triggerTypes}
 for effectName, count in effects.items():
-    effectPct.append((effectName, count / sims))
+    effectPct.append((effectName, count / sims / triggerWeights[effectName]))
 effectPct = sorted(effectPct, key=lambda t: t[1], reverse=True)
 
 print()

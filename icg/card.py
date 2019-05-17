@@ -268,11 +268,12 @@ class Result:
 # complexity 0 = simple, 1 = sorta simple, 2 = complex
 # hydrate should generate a Trigger which is always the same given the same card.triggerSeed
 class TriggerType:
-    def __init__(self, name, hydrate, difficulty=1, complexity=1, phases=set(Phase), interactive=False):
+    def __init__(self, name, hydrate, difficulty=1, complexity=1, weight=1, phases=set(Phase), interactive=False):
         self.name = name
         self.hydrate = hydrate
         self.difficulty = difficulty
         self.complexity = complexity
+        self.weight = weight
         self.phases = phases
         self.interactive = interactive
 
@@ -288,11 +289,12 @@ class TriggerType:
 # complexity 0 = simple, 1 = sorta simple, 2 = complex
 # hydrate should generate a Result which is always the same given the same card.resultSeed
 class ResultType:
-    def __init__(self, name, hydrate, power=1, complexity=1, phases=set(Phase), interactive=False):
+    def __init__(self, name, hydrate, power=1, complexity=1, weight=1, phases=set(Phase), interactive=False):
         self.name = name
         self.hydrate = hydrate
         self.power = power
         self.complexity = complexity
+        self.weight = weight
         self.phases = phases
         self.interactive = interactive
 
@@ -438,20 +440,20 @@ def hydrate_close_defender_trigger(card):
     return Trigger(f"you are losing the first age by less than 25", check)
 
 
-# TODO: weights and possibly limits
+# TODO: possibly limits
 triggerTypes = [
     TriggerType("easy_synergy", hydrate_easy_synergy_trigger),
     TriggerType("hard_synergy", hydrate_hard_synergy_trigger, difficulty=3),
     TriggerType("counter", hydrate_counter_trigger, difficulty=3, interactive=True),
     TriggerType("crystal_synergy", hydrate_crystal_synergy_trigger, difficulty=3),
-    TriggerType("exact_synergy", hydrate_exact_synergy_trigger, difficulty=2),
+    TriggerType("exact_synergy", hydrate_exact_synergy_trigger, difficulty=2, weight=.5),
     TriggerType("variety", hydrate_variety_trigger),
-    TriggerType("hard_variety", hydrate_hard_variety_trigger, difficulty=2),
+    TriggerType("hard_variety", hydrate_hard_variety_trigger, difficulty=2, weight=.5),
     TriggerType("diversity", hydrate_diversity_trigger),
-    TriggerType("hard_diversity", hydrate_hard_diversity_trigger, difficulty=2),
-    TriggerType("attacker", hydrate_attacker_trigger, phases={Phase.RESULT}, interactive=True),
-    TriggerType("defender", hydrate_defender_trigger, phases={Phase.RESULT}, interactive=True),
-    TriggerType("close_defender", hydrate_close_defender_trigger,
+    TriggerType("hard_diversity", hydrate_hard_diversity_trigger, difficulty=2, weight=.5),
+    TriggerType("attacker", hydrate_attacker_trigger, weight=1.8, phases={Phase.RESULT}, interactive=True),
+    TriggerType("defender", hydrate_defender_trigger, weight=1.2, phases={Phase.RESULT}, interactive=True),
+    TriggerType("close_defender", hydrate_close_defender_trigger, weight=1.8,
                 phases={Phase.RESULT}, difficulty=2, interactive=True)
 ]
 
@@ -547,18 +549,20 @@ resultTypes = [
     ResultType("strong", hydrate_strong_result, complexity=0),
     ResultType("verystrong", hydrate_verystrong_result, power=2, complexity=0),
     ResultType("ultrastrong_lowstart", hydrate_ultrastrong_lowstart_result, power=3),
-    ResultType("verystrong_spawn", hydrate_verystrong_spawn_result, power=2)
+    ResultType("verystrong_spawn", hydrate_verystrong_spawn_result, power=2, weight=.25)
 ]
 
 
 def generate_trigger_result(card, difficulty=None):
     filteredTriggerTypes = triggerTypes
     if difficulty is not None:
-        filteredTriggerTypes = list(filter(lambda tt: tt.difficulty == difficulty, triggerTypes))
-    triggerType = random.choice(filteredTriggerTypes)
+        filteredTriggerTypes = [tt for tt in triggerTypes if tt.difficulty == difficulty]
+    triggerTypeWeights = [tt.weight for tt in filteredTriggerTypes]
+    triggerType = random.choices(filteredTriggerTypes, weights=triggerTypeWeights)[0]
     # TODO: make this wiggle occasionally
-    filteredResultTypes = list(filter(lambda rt: rt.power == triggerType.difficulty and len(rt.phases & triggerType.phases) > 0, resultTypes))
-    resultType = random.choice(filteredResultTypes)
+    filteredResultTypes = [rt for rt in resultTypes if rt.power == triggerType.difficulty and len(rt.phases & triggerType.phases) > 0]
+    resultTypeWeights = [rt.weight for rt in filteredResultTypes]
+    resultType = random.choices(filteredResultTypes, weights=resultTypeWeights)[0]
 
     card.triggerSeed = random.randrange(sys.maxsize)
     trigger = triggerType.hydrate(card)

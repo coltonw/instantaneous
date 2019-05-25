@@ -267,17 +267,18 @@ class Result:
 # complexity 0 = simple, 1 = sorta simple, 2 = complex
 # hydrate should generate a Trigger which is always the same given the same card.triggerSeed
 class TriggerType:
-    def __init__(self, name, hydrate, difficulty=1, complexity=1, weight=1, phases=set(Phase), interactive=False):
+    def __init__(self, name, hydrate, difficulty=1, complexity=1, weight=1, phases=set(Phase), preferredPhase=None, interactive=False):
         self.name = name
         self.hydrate = hydrate
         self.difficulty = difficulty
         self.complexity = complexity
         self.weight = weight
         self.phases = phases
+        self.preferredPhase = preferredPhase
         self.interactive = interactive
 
     def __repr__(self):
-        return f'TriggerType({self.name},{self.difficulty},{self.complexity},{self.weight},{self.phases},{self.interactive})'
+        return f'TriggerType({self.name},{self.difficulty},{self.complexity},{self.weight},{self.phases},{self.preferredPhase},{self.interactive})'
 
     def __str__(self):
         return repr(self)
@@ -288,17 +289,19 @@ class TriggerType:
 # complexity 0 = simple, 1 = sorta simple, 2 = complex
 # hydrate should generate a Result which is always the same given the same card.resultSeed
 class ResultType:
-    def __init__(self, name, hydrate, minPower=1, complexity=1, weight=1, phases=set(Phase), interactive=False):
+    def __init__(self, name, hydrate, minPower=1, maxPower=1, complexity=1, weight=1, phases=set(Phase), preferredPhase=None, interactive=False):
         self.name = name
         self.hydrate = hydrate
         self.minPower = minPower
+        self.maxPower = maxPower
         self.complexity = complexity
         self.weight = weight
         self.phases = phases
+        self.preferredPhase = preferredPhase
         self.interactive = interactive
 
     def __repr__(self):
-        return f'ResultType({self.name},{self.minPower},{self.complexity},{self.phases},{self.interactive})'
+        return f'ResultType({self.name},{self.minPower},{self.maxPower},{self.complexity},{self.phases},{self.preferredPhase},{self.interactive})'
 
     def __str__(self):
         return repr(self)
@@ -481,8 +484,8 @@ def hydrate_strength_result(card, power):
 
     def apply(self, deck, oppDeck):
         for ageIdx in range(2):
-            if deck[self.cardId].strength[ageIdx] > 0:
-                deck[self.cardId].strength[ageIdx] += value
+            if deck['cards'][self.cardId].strength[ageIdx] > 0:
+                deck['cards'][self.cardId].strength[ageIdx] += value
                 deck['total'][ageIdx] += value
 
     return Result(f"gain {valueStr} strength", apply=apply)
@@ -503,8 +506,8 @@ def hydrate_strength_lowstart_result(card, power):
 
     def apply(self, deck, oppDeck):
         for ageIdx in range(2):
-            if deck[self.cardId].strength[ageIdx] > 0:
-                deck[self.cardId].strength[ageIdx] += value
+            if deck['cards'][self.cardId].strength[ageIdx] > 0:
+                deck['cards'][self.cardId].strength[ageIdx] += value
                 deck['total'][ageIdx] += value
 
     return Result(f"gain {valueStr} strength", apply=apply, starting_str=starting_str)
@@ -519,16 +522,50 @@ def hydrate_spawn_result(card, power):
 
     def apply(self, deck, oppDeck):
         spawn = Card([0, value], Age.CRYSTAL, card.race, card.prof, useUuid=True)
-        deck[spawn.cardId] = spawn
+        deck['cards'][spawn.cardId] = spawn
         deck['total'][1] += value
 
     return Result(f"create a 0 | {valueStr} {card.prof.name.capitalize()} {card.race.name.capitalize()}", apply=apply)
 
 
+def hydrate_mirror_crystal_result(card, power):
+    # not needed here but sometimes is needed
+    # rand = random.Random(card.resultSeed)
+
+    def apply(self, deck, oppDeck):
+        maxStr = 0
+        for card in deck['cards'].values():
+            if card.strength[0] == 0 and card.strength[1] > maxStr:
+                maxStr = card.strength[1]
+        if maxStr > 0:
+            deck['cards'][self.cardId].strength[0] = 0
+            deck['total'][0] -= deck['cards'][self.cardId].strength[0]
+            strDiff = maxStr - deck['cards'][self.cardId].strength[1]
+            deck['cards'][self.cardId].strength[1] = maxStr
+            deck['total'][1] += strDiff
+
+    return Result(f"copy the strength of your biggest 0|X card", apply=apply)
+
+
+def hydrate_weaken_opponent_army_result(card, power):
+    # not needed here but sometimes is needed
+    # rand = random.Random(card.resultSeed)
+
+    value = power * 2
+    valueStr = str(value)
+
+    def apply(self, deck, oppDeck):
+        oppDeck['total'][1] -= value
+
+    return Result(f"weaken the opponent's army by {valueStr} in the final age", apply=apply)
+
+
 resultTypes = [
     ResultType("strength", hydrate_strength_result, complexity=0),
     ResultType("strength_lowstart", hydrate_strength_lowstart_result, minPower=3),
-    ResultType("spawn", hydrate_spawn_result, weight=.25)
+    ResultType("spawn", hydrate_spawn_result, weight=.25, preferredPhase=Phase.BEFORE),
+    ResultType("mirror_crystal", hydrate_mirror_crystal_result, minPower=2, maxPower=3, weight=.25),
+    ResultType("weaken_opponent_army", hydrate_weaken_opponent_army_result, weight=.25)
 ]
 
 
@@ -539,7 +576,7 @@ def generate_trigger_result(card, difficulty=None):
     triggerTypeWeights = [tt.weight for tt in filteredTriggerTypes]
     triggerType = random.choices(filteredTriggerTypes, weights=triggerTypeWeights)[0]
     # TODO: make this wiggle occasionally
-    filteredResultTypes = [rt for rt in resultTypes if rt.minPower <= triggerType.difficulty and len(rt.phases & triggerType.phases) > 0]
+    filteredResultTypes = [rt for rt in resultTypes if rt.minPower <= triggerType.difficulty and rt.maxPower >= triggerType.difficulty and len(rt.phases & triggerType.phases) > 0]
     resultTypeWeights = [rt.weight for rt in filteredResultTypes]
     resultType = random.choices(filteredResultTypes, weights=resultTypeWeights)[0]
 
@@ -550,11 +587,15 @@ def generate_trigger_result(card, difficulty=None):
     result = resultType.hydrate(card, triggerType.difficulty)
 
     possiblePhases = triggerType.phases & resultType.phases
-    phase = Phase.EFFECT
-    if Phase.EFFECT not in possiblePhases:
+    preferredPhase = Phase.EFFECT
+    if triggerType.preferredPhase is not None and triggerType.preferredPhase in possiblePhases:
+        preferredPhase = triggerType.preferredPhase
+    elif resultType.preferredPhase is not None and resultType.preferredPhase in possiblePhases:
+        preferredPhase = resultType.preferredPhase
+    if preferredPhase not in possiblePhases:
         for p in Phase:
             if p in possiblePhases:
-                phase = p
+                preferredPhase = p
                 break
 
     if card.mod is Mod.NORMAL:
@@ -563,12 +604,17 @@ def generate_trigger_result(card, difficulty=None):
         card.strength = result.starting_str(card)
 
     if result.apply is not None:
-        effect = Effect(check=trigger.check, apply=result.apply, phase=phase,
+        effect = Effect(check=trigger.check, apply=result.apply, phase=preferredPhase,
                         interactive=triggerType.interactive or resultType.interactive, cardId=card.cardId,
                         name=f'{triggerType.name}-{resultType.name}', triggerName=triggerType.name,
                         triggerSeed=card.triggerSeed, resultName=resultType.name, resultSeed=card.resultSeed)
         card.effects.append(effect)
-    card.desc = f'If {trigger.desc}, {result.desc}'
+    condition = 'If'
+    if preferredPhase is Phase.BEFORE:
+        condition = 'Before effects, if'
+    elif preferredPhase is Phase.AFTER:
+        condition = 'After effects, if'
+    card.desc = f'{condition} {trigger.desc}, {result.desc}'
 
     return card
 

@@ -12,7 +12,9 @@ def simple_deck_strength(deckMetadata):
 # deckMetadata: {
 #     deck,
 #     base: {
-#         cardId: { copy of card },
+#         cards: {
+#             cardId: { copy of card },
+#         },
 #         count: {
 #             Race.UNDEAD: 0,
 #             Age.CRYSTAL: 0,
@@ -30,6 +32,7 @@ def simple_deck_strength(deckMetadata):
 _baseMetadata = {
     'deck': [],
     'base': {
+        'cards': {},
         'count': {},
         'total': [0, 0]
     },
@@ -78,7 +81,7 @@ def add_card(deckMetadata, card):
         deckMetadata['interactive'] = deckMetadata['interactive'] or effect.interactive
         deckMetadata[effect.phase]['effects'].append(effect)
 
-    deckMetadata['base'][card.cardId] = copy.deepcopy(card)
+    deckMetadata['base']['cards'][card.cardId] = copy.deepcopy(card)
 
 
 def to_metadata(deck):

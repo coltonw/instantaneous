@@ -6,6 +6,7 @@ plugins:
   - serverless-python-requirements
   - serverless-apigw-binary
   - serverless-apigwy-binary
+  - serverless-domain-manager
 
 provider:
   name: aws
@@ -71,3 +72,9 @@ custom:
   apigwBinary:
     types:
       - 'application/x-protobuf'
+  customDomain:
+    domainName: icg.willcolton.com
+    certificateName: '*.willcolton.com'
+    basePath: ${self:provider.stage}
+    stage: ${self:provider.stage}
+    createRoute53Record: true

@@ -289,7 +289,7 @@ class TriggerType:
 # complexity 0 = simple, 1 = sorta simple, 2 = complex
 # hydrate should generate a Result which is always the same given the same card.resultSeed
 class ResultType:
-    def __init__(self, name, hydrate, minPower=1, maxPower=1, complexity=1, weight=1, phases=set(Phase), preferredPhase=None, interactive=False):
+    def __init__(self, name, hydrate, minPower=1, maxPower=sys.maxsize, complexity=1, weight=1, phases=set(Phase), preferredPhase=None, interactive=False):
         self.name = name
         self.hydrate = hydrate
         self.minPower = minPower
@@ -456,7 +456,7 @@ triggerTypes = [
     TriggerType("attacker", hydrate_attacker_trigger, weight=1.8, phases={Phase.RESULT}, interactive=True),
     TriggerType("defender", hydrate_defender_trigger, weight=1.2, phases={Phase.RESULT}, interactive=True),
     TriggerType("close_defender", hydrate_close_defender_trigger, weight=1.8,
-                phases={Phase.RESULT}, difficulty=2, interactive=True)
+                phases={Phase.RESULT}, difficulty=2, interactive=True, complexity=2)
 ]
 
 
@@ -525,7 +525,27 @@ def hydrate_spawn_result(card, power):
         deck['cards'][spawn.cardId] = spawn
         deck['total'][1] += value
 
-    return Result(f"create a 0 | {valueStr} {card.prof.name.capitalize()} {card.race.name.capitalize()}", apply=apply)
+    return Result(f"create a 0 | {valueStr} {card.race.name.capitalize()} {card.prof.name.capitalize()}", apply=apply)
+
+
+def hydrate_mirror_iron_result(card, power):
+    # not needed here but sometimes is needed
+    # rand = random.Random(card.resultSeed)
+
+    def apply(self, deck, oppDeck):
+        maxStr = 0
+        for card in deck['cards'].values():
+            if card.strength[0] == card.strength[1] and card.strength[0] > maxStr:
+                maxStr = card.strength[0]
+        if maxStr > 0:
+            strDiff = maxStr - deck['cards'][self.cardId].strength[0]
+            deck['cards'][self.cardId].strength[0] = maxStr
+            deck['total'][0] += strDiff
+            strDiff = maxStr - deck['cards'][self.cardId].strength[1]
+            deck['cards'][self.cardId].strength[1] = maxStr
+            deck['total'][1] += strDiff
+
+    return Result(f"copy the strength of your biggest X|X card", apply=apply)
 
 
 def hydrate_mirror_crystal_result(card, power):
@@ -564,8 +584,9 @@ resultTypes = [
     ResultType("strength", hydrate_strength_result, complexity=0),
     ResultType("strength_lowstart", hydrate_strength_lowstart_result, minPower=3),
     ResultType("spawn", hydrate_spawn_result, weight=.25, preferredPhase=Phase.BEFORE),
-    ResultType("mirror_crystal", hydrate_mirror_crystal_result, minPower=2, maxPower=3, weight=.25),
-    ResultType("weaken_opponent_army", hydrate_weaken_opponent_army_result, weight=.25)
+    ResultType("mirror_iron", hydrate_mirror_iron_result, minPower=2, maxPower=3, weight=.1),
+    ResultType("mirror_crystal", hydrate_mirror_crystal_result, minPower=2, maxPower=3, weight=.1),
+    ResultType("weaken_opponent_army", hydrate_weaken_opponent_army_result, weight=.25, complexity=2)
 ]
 
 

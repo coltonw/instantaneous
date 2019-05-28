@@ -442,7 +442,7 @@ def hydrate_close_defender_trigger(card):
     return Trigger(f"you are losing the first age by less than 25", check)
 
 
-# TODO: possibly limits
+# TODO: possibly add limits
 triggerTypes = [
     TriggerType("easy_synergy", hydrate_easy_synergy_trigger),
     TriggerType("hard_synergy", hydrate_hard_synergy_trigger, difficulty=3),
